@@ -1,0 +1,188 @@
+/* ── Fuentes ─────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Nunito', 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Modo claro: fondo slate levemente azulado para distinguir cards */
+  background-color: #EFF2F7;
+  color: #1a1f2e;
+}
+
+.dark body {
+  background-color: #0d0f18;
+  color: #e8eaf0;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c5cad8; border-radius: 4px; }
+.dark ::-webkit-scrollbar-thumb { background: #374151; }
+
+/* ── Componentes ─────────────────────────────────────────── */
+@layer components {
+
+  /* ── Botones ── */
+  .btn-patient {
+    @apply bg-sage-400 hover:bg-sage-500 text-white font-bold py-3 px-6 rounded-2xl
+           transition-all duration-200 shadow-sm hover:shadow-md active:scale-95
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-psych {
+    @apply bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-5 rounded-xl
+           transition-all duration-200 shadow-sm hover:shadow-md active:scale-95
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply border border-gray-300 dark:border-gray-700
+           hover:bg-gray-100 dark:hover:bg-gray-800
+           text-gray-700 dark:text-gray-300 font-medium
+           py-2.5 px-5 rounded-xl transition-all duration-200;
+  }
+
+  /* ── Cards — con borde visible en modo claro ── */
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-2xl p-5
+           border border-gray-200 dark:border-gray-700
+           shadow-sm;
+  }
+
+  .card-pastel {
+    @apply bg-gradient-to-br from-lavender-100 to-peach-50 dark:from-gray-800 dark:to-gray-800
+           rounded-2xl border border-lavender-200 dark:border-gray-700 p-5 shadow-sm;
+  }
+
+  .card-psych {
+    @apply bg-white dark:bg-gray-800 rounded-2xl
+           border border-gray-200 dark:border-gray-700
+           shadow-sm p-5 transition-colors duration-200;
+  }
+
+  /* ── Inputs — borde más oscuro en modo claro ── */
+  .input {
+    @apply w-full px-4 py-3 rounded-xl
+           border border-gray-300 dark:border-gray-600
+           bg-white dark:bg-gray-700
+           text-gray-900 dark:text-gray-100
+           placeholder-gray-400 dark:placeholder-gray-500
+           focus:outline-none focus:ring-2 focus:ring-sage-400 dark:focus:ring-sage-500
+           transition-all duration-200 text-base;
+  }
+
+  .input-psych {
+    @apply w-full px-4 py-2.5 rounded-lg
+           border border-gray-300 dark:border-gray-600
+           bg-white dark:bg-gray-700
+           text-gray-900 dark:text-gray-100
+           placeholder-gray-400 dark:placeholder-gray-500
+           focus:outline-none focus:ring-2 focus:ring-indigo-500
+           transition-all duration-200 text-sm;
+  }
+
+  /* ── Tags ── */
+  .tag {
+    @apply text-xs font-semibold px-2.5 py-1 rounded-full
+           bg-indigo-100 dark:bg-indigo-900/30
+           text-indigo-700 dark:text-indigo-300
+           border border-indigo-200 dark:border-indigo-800;
+  }
+
+  /* ── Labels ── */
+  .label {
+    @apply block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5;
+  }
+
+  /* ── Glassmorphism header ── */
+  .glass {
+    @apply bg-white/90 dark:bg-gray-900/80 backdrop-blur-md
+           border-b border-gray-200 dark:border-gray-800;
+  }
+}
+
+/* ── Utilidades extra ────────────────────────────────────── */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ── Slider de ánimo ─────────────────────────────────────── */
+.mood-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  cursor: grab;
+  transition: background 0.15s ease;
+}
+.mood-slider:active {
+  cursor: grabbing;
+}
+
+/* Thumb: círculo grande estilizado */
+.mood-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid currentColor;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  cursor: grab;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.mood-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+}
+.mood-slider:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  transform: scale(1.15);
+}
+.mood-slider::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #8FBC8F;
+  cursor: grab;
+}
+
+/* ── Recharts ────────────────────────────────────────────── */
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+
+/* ── Animaciones ─────────────────────────────────────────── */
+@keyframes fadeIn    { from { opacity: 0 } to { opacity: 1 } }
+@keyframes slideUp   { from { transform: translateY(10px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+@keyframes scaleIn   { from { transform: scale(0.95); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+
+.animate-fade-in  { animation: fadeIn 0.25s ease-out; }
+.animate-slide-up { animation: slideUp 0.25s ease-out; }
+.animate-scale-in { animation: scaleIn 0.2s ease-out; }
