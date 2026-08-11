@@ -29,7 +29,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # AQUI LE DICES A GITHUB DONDE ESTA TU CARPETA
-          path: './client'
+          path: './docs'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
