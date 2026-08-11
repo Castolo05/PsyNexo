@@ -9,9 +9,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const storedUser = localStorage.getItem('nexo_user')
-    const token = localStorage.getItem('nexo_token')
-    if (storedUser && token) {
-      setUser(JSON.parse(storedUser))
+    if (storedUser) {
+      try { setUser(JSON.parse(storedUser)) } catch {}
     }
     setLoading(false)
   }, [])

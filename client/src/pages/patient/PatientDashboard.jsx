@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
-  CalendarDays, TrendingUp, CheckCircle2, Wind,
-  Bookmark, Edit2, Save, X, MessageCircleOff,
+  TrendingUp, CheckCircle2, Save, X, Edit2,
 } from 'lucide-react'
 import api from '../../lib/api'
-import { MOOD_ICONS, AVAILABLE_TAGS, formatDateShort, isSameDay, isEditable } from '../../lib/constants'
+import { MOOD_ICONS, formatDateShort, isSameDay, isEditable } from '../../lib/constants'
 import MoodIcon from '../../components/MoodIcon'
 import MoodChart from '../../components/MoodChart'
 
@@ -22,22 +21,22 @@ function formatAppointmentDate(dateStr) {
     + ' — ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs'
 }
 
-// ── Formulario de nota inline ──────────────────────────────
-function NoteForm({ initialMood = 5, initialContent = '', initialTags = [], initialFlag = false, onSubmit, onCancel, isEdit = false, submitting }) {
+// ── Formulario de nota inline ────────────────────────────────────
+function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], habits = [], onSubmit, onCancel, isEdit = false, submitting }) {
   const [mood, setMood] = useState(initialMood)
   const [content, setContent] = useState(initialContent)
-  const [tags, setTags] = useState(initialTags)
+  const [completedHabits, setCompletedHabits] = useState(initialHabits)
   const [preferInSession, setPreferInSession] = useState(false)
 
   const moodConfig = MOOD_ICONS[mood]
   const sliderPercent = ((mood - 1) / 9) * 100
 
-  const toggleTag = (tag) =>
-    setTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag])
+  const toggleHabit = (id) =>
+    setCompletedHabits(prev => prev.includes(id) ? prev.filter(h => h !== id) : [...prev, id])
 
   const handleSubmit = () => {
     if (!preferInSession && !content.trim()) return
-    onSubmit({ mood, content, tags })
+    onSubmit({ mood, content, completedHabits })
   }
 
   return (
@@ -94,7 +93,7 @@ function NoteForm({ initialMood = 5, initialContent = '', initialTags = [], init
         </div>
         <textarea
           className="input resize-none h-28"
-          placeholder={preferInSession ? '(Opcional) Puedes dejar esto vacío y hablarlo en la sesión...' : 'Contá cómo te sentiste, qué te pasó...'}
+          placeholder={preferInSession ? '(Opcional) Puedes dejar esto vacío...' : 'Contá cómo te sentiste, qué te pasó...'}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           maxLength={5000}
@@ -103,23 +102,39 @@ function NoteForm({ initialMood = 5, initialContent = '', initialTags = [], init
         <p className="text-right text-xs text-gray-400 mt-1">{content.length}/5000</p>
       </div>
 
-      {/* Tags */}
-      <div className="card">
-        <label className="label">Etiquetas <span className="font-normal text-gray-400">(opcional)</span></label>
-        <div className="flex flex-wrap gap-1.5">
-          {AVAILABLE_TAGS.map((tag) => (
-            <button key={tag} type="button" onClick={() => toggleTag(tag)}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-all font-medium ${
-                tags.includes(tag)
-                  ? 'bg-sage-400 text-white border-sage-400'
-                  : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-sage-300'
-              }`}
-            >{tag}</button>
-          ))}
+      {/* Hábitos del día */}
+      {habits.length > 0 && (
+        <div className="card">
+          <label className="label">¿Qué hábitos cumpliste hoy?</label>
+          <div className="space-y-2">
+            {habits.map(habit => {
+              const done = completedHabits.includes(habit.id)
+              return (
+                <button
+                  key={habit.id}
+                  type="button"
+                  onClick={() => toggleHabit(habit.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border-2 transition-all text-left ${
+                    done
+                      ? 'border-sage-400 bg-sage-50 dark:bg-sage-900/20'
+                      : 'border-gray-200 dark:border-gray-600 hover:border-sage-300'
+                  }`}
+                >
+                  <span className="text-xl">{habit.emoji}</span>
+                  <span className={`flex-1 text-sm font-semibold ${
+                    done ? 'text-sage-700 dark:text-sage-300' : 'text-gray-600 dark:text-gray-300'
+                  }`}>{habit.text}</span>
+                  <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                    done ? 'bg-sage-400 border-sage-400' : 'border-gray-300 dark:border-gray-500'
+                  }`}>
+                    {done && <span className="text-white text-xs font-bold">✓</span>}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
-      </div>
-
-      {/* Se eliminó el botón grande de prefiero hablar en sesión */}
+      )}
 
       {/* Acciones */}
       <div className="flex gap-2">
@@ -141,10 +156,11 @@ function NoteForm({ initialMood = 5, initialContent = '', initialTags = [], init
   )
 }
 
-// ── Dashboard principal ────────────────────────────────────
+// ── Dashboard principal ──────────────────────────────────────────
 export default function PatientDashboard() {
   const { user } = useAuth()
   const [entries, setEntries] = useState([])
+  const [habits, setHabits] = useState([])
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
   const [editMode, setEditMode] = useState(false)
@@ -159,9 +175,11 @@ export default function PatientDashboard() {
     Promise.all([
       api.get('/journal'),
       api.get('/appointments'),
-    ]).then(([jRes, aRes]) => {
+      api.get('/habits'),
+    ]).then(([jRes, aRes, hRes]) => {
       setEntries(jRes.data.entries)
       setAppointments(aRes.data.appointments)
+      setHabits(hRes.data.habits)
     }).catch(console.error).finally(() => setLoading(false))
   }, [])
 
@@ -182,28 +200,24 @@ export default function PatientDashboard() {
     ? Math.round((chartFilteredEntries.reduce((s, e) => s + e.moodScore, 0) / chartFilteredEntries.length) * 10) / 10
     : null
 
-  const handleCreate = async ({ mood, content, tags }) => {
+  const handleCreate = async ({ mood, content, completedHabits }) => {
     setSubmitting(true)
     try {
-      const { data } = await api.post('/journal', { moodScore: mood, content, tags })
+      const { data } = await api.post('/journal', { moodScore: mood, content, completedHabits })
       setEntries((prev) => [data.entry, ...prev])
       showSuccess('¡Nota de hoy guardada! 🎉')
       setEditMode(false)
     } catch (err) {
-      if (err.response?.status === 409) {
-        showSuccess('Ya existe una nota hoy.')
-      }
+      if (err.response?.status === 409) showSuccess('Ya existe una nota hoy.')
     } finally {
       setSubmitting(false)
     }
   }
 
-  const handleUpdate = async ({ mood, content, tags }) => {
+  const handleUpdate = async ({ mood, content, completedHabits }) => {
     setSubmitting(true)
     try {
-      const { data } = await api.put(`/journal/${todayEntry.id}`, {
-        moodScore: mood, content, tags,
-      })
+      const { data } = await api.put(`/journal/${todayEntry.id}`, { moodScore: mood, content, completedHabits })
       setEntries((prev) => prev.map((e) => e.id === todayEntry.id ? data.entry : e))
       showSuccess('Nota actualizada.')
       setEditMode(false)
@@ -257,6 +271,7 @@ export default function PatientDashboard() {
           </p>
           <NoteForm
             onSubmit={handleCreate}
+            habits={habits}
             submitting={submitting}
           />
         </div>
@@ -269,7 +284,8 @@ export default function PatientDashboard() {
           <NoteForm
             initialMood={todayEntry.moodScore}
             initialContent={todayEntry.content}
-            initialTags={todayEntry.tags || []}
+            initialHabits={todayEntry.completedHabits || []}
+            habits={habits}
             onSubmit={handleUpdate}
             onCancel={() => setEditMode(false)}
             isEdit
@@ -323,9 +339,16 @@ export default function PatientDashboard() {
             <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
               {todayEntry.content}
             </p>
-            {todayEntry.tags?.length > 0 && (
+            {todayEntry.completedHabits?.length > 0 && habits.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
-                {todayEntry.tags.map((t) => <span key={t} className="tag">{t}</span>)}
+                {todayEntry.completedHabits.map(hId => {
+                  const h = habits.find(x => x.id === hId)
+                  return h ? (
+                    <span key={hId} className="text-xs px-2.5 py-1 rounded-full bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-300 font-medium">
+                      {h.emoji} {h.text}
+                    </span>
+                  ) : null
+                })}
               </div>
             )}
             {!canEditToday && (

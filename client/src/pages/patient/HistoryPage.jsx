@@ -1,23 +1,125 @@
 import { useState, useEffect } from 'react'
 import api from '../../lib/api'
-import { MOOD_ICONS, AVAILABLE_TAGS, formatDate, isEditable } from '../../lib/constants'
+import { MOOD_ICONS, formatDate, isEditable } from '../../lib/constants'
 import MoodIcon from '../../components/MoodIcon'
 import MoodCalendar from '../../components/MoodCalendar'
-import { Trash2, ChevronDown, ChevronUp, Clock, Bookmark, BookmarkX, Filter } from 'lucide-react'
+import { Trash2, ChevronDown, ChevronUp, Clock, TrendingUp, TrendingDown, Minus, BarChart2 } from 'lucide-react'
 
+// ── Tarjeta de correlación hábito-ánimo ──────────────────
+function HabitCorrelationCard({ data }) {
+  if (!data || data.length === 0) return null
+
+  return (
+    <div className="card animate-fade-in">
+      <div className="flex items-center gap-2 mb-4">
+        <BarChart2 size={16} className="text-sage-500" />
+        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
+          Hábitos y estado de ánimo
+        </h2>
+      </div>
+      <p className="text-xs text-gray-400 mb-4">
+        Comparación de tu ánimo promedio en días que cumpliste cada hábito vs. los que no.
+      </p>
+      <div className="space-y-3">
+        {data.sort((a, b) => (b.impact ?? -99) - (a.impact ?? -99)).map(item => {
+          const impact = item.impact ?? 0
+          const positive = impact > 0.2
+          const negative = impact < -0.2
+          const ImpactIcon = positive ? TrendingUp : negative ? TrendingDown : Minus
+          const impactColor = positive ? 'text-emerald-500' : negative ? 'text-red-400' : 'text-gray-400'
+          const barColor = positive ? 'bg-emerald-400' : negative ? 'bg-red-400' : 'bg-gray-300'
+          const maxBar = 100
+
+          // Barras normalizadas a 10
+          const withPct  = item.avgWith    ? (item.avgWith    / 10) * 100 : 0
+          const withoutPct = item.avgWithout ? (item.avgWithout / 10) * 100 : 0
+
+          return (
+            <div key={item.habitId} className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{item.emoji}</span>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{item.text}</span>
+                </div>
+                <div className={`flex items-center gap-1 text-sm font-bold ${impactColor}`}>
+                  <ImpactIcon size={14} />
+                  {impact > 0 ? '+' : ''}{impact.toFixed(1)}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {/* Con hábito */}
+                <div>
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    <span>Con este hábito <span className="text-gray-400">({item.countWith} días)</span></span>
+                    <span className="font-bold" style={{ color: item.avgWith ? MOOD_ICONS[Math.round(item.avgWith)]?.color : '#9ca3af' }}>
+                      {item.avgWith ?? '—'}/10
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${withPct}%`, backgroundColor: item.avgWith ? MOOD_ICONS[Math.round(item.avgWith)]?.color : '#d1d5db' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Sin hábito */}
+                <div>
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    <span>Sin este hábito <span className="text-gray-400">({item.countWithout} días)</span></span>
+                    <span className="font-bold text-gray-500">
+                      {item.avgWithout ?? '—'}/10
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gray-400 rounded-full transition-all duration-500"
+                      style={{ width: `${withoutPct}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {Math.abs(impact) > 0.5 && (
+                <p className={`text-xs mt-2 font-medium ${impactColor}`}>
+                  {positive
+                    ? `📈 Los días que cumplís este hábito tu ánimo es ${impact.toFixed(1)} puntos más alto en promedio.`
+                    : `📉 Los días que cumplís este hábito tu ánimo tiende a ser ${Math.abs(impact).toFixed(1)} puntos más bajo.`}
+                </p>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      <p className="text-xs text-gray-400 mt-3 text-center">
+        * Se muestran hábitos con al menos 3 días de cumplimiento registrado.
+      </p>
+    </div>
+  )
+}
+
+// ── Página de historial ───────────────────────────────────
 export default function HistoryPage() {
   const [entries, setEntries] = useState([])
+  const [habits, setHabits] = useState([])
+  const [correlation, setCorrelation] = useState([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(null)
   const [deleting, setDeleting] = useState(null)
-  const [filterTag, setFilterTag] = useState('')
   const [selectedDay, setSelectedDay] = useState(null)
+  const [tab, setTab] = useState('entries') // 'entries' | 'correlation'
 
   useEffect(() => {
-    api.get('/journal')
-      .then(({ data }) => setEntries(data.entries))
-      .catch(console.error)
-      .finally(() => setLoading(false))
+    Promise.all([
+      api.get('/journal'),
+      api.get('/habits'),
+      api.get('/habits/correlation'),
+    ]).then(([jRes, hRes, cRes]) => {
+      setEntries(jRes.data.entries)
+      setHabits(hRes.data.habits)
+      setCorrelation(cRes.data)
+    }).catch(console.error).finally(() => setLoading(false))
   }, [])
 
   const handleDelete = async (id) => {
@@ -33,22 +135,14 @@ export default function HistoryPage() {
     }
   }
 
-  const handleDayClick = (date, dayEntries) => {
-    setSelectedDay((prev) => {
-      const isSame = prev?.toDateString() === date.toDateString()
-      return isSame ? null : date
-    })
-    setFilterTag('')
+  const handleDayClick = (date) => {
+    setSelectedDay(prev => prev?.toDateString() === date.toDateString() ? null : date)
   }
 
   let filtered = entries
   if (selectedDay) {
-    filtered = filtered.filter((e) => {
-      const d = new Date(e.createdAt)
-      return d.toDateString() === selectedDay.toDateString()
-    })
+    filtered = filtered.filter(e => new Date(e.createdAt).toDateString() === selectedDay.toDateString())
   }
-  if (filterTag) filtered = filtered.filter((e) => e.tags?.includes(filterTag))
 
   if (loading) {
     return (
@@ -65,130 +159,163 @@ export default function HistoryPage() {
         <p className="text-sm text-gray-400">{entries.length} entradas</p>
       </div>
 
-      {/* ── Calendario de ánimo ── */}
-      {entries.length > 0 && (
-        <div>
-          <MoodCalendar
-            entries={entries}
-            onDayClick={handleDayClick}
-            selectedDate={selectedDay}
-            mode="patient"
-          />
-          {selectedDay && (
-            <div className="flex items-center justify-between mt-2 px-1">
-              <p className="text-xs text-sage-600 dark:text-sage-400 font-semibold">
-                📅 {selectedDay.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
-              </p>
-              <button onClick={() => setSelectedDay(null)} className="text-xs text-gray-400 hover:text-gray-600 underline">
-                Ver todo
-              </button>
+      {/* Tabs */}
+      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl">
+        <button
+          onClick={() => setTab('entries')}
+          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+            tab === 'entries'
+              ? 'bg-white dark:bg-gray-700 text-sage-600 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400'
+          }`}
+        >
+          📔 Entradas
+        </button>
+        <button
+          onClick={() => setTab('correlation')}
+          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+            tab === 'correlation'
+              ? 'bg-white dark:bg-gray-700 text-sage-600 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400'
+          }`}
+        >
+          📊 Hábitos y ánimo
+        </button>
+      </div>
+
+      {/* TAB: Correlación */}
+      {tab === 'correlation' && (
+        correlation.length > 0
+          ? <HabitCorrelationCard data={correlation} />
+          : (
+            <div className="text-center py-12 text-gray-400">
+              <BarChart2 size={40} className="mx-auto mb-3 text-gray-300" />
+              <p className="font-medium">Sin datos suficientes aún</p>
+              <p className="text-sm mt-1">Necesitás al menos 5 entradas con hábitos para ver correlaciones.</p>
             </div>
-          )}
-        </div>
+          )
       )}
 
-      {entries.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="text-6xl mb-4">📔</div>
-          <h2 className="text-xl font-bold text-gray-700 dark:text-white mb-2">Historial vacío</h2>
-          <p className="text-gray-400">Tus anotaciones aparecerán aquí.</p>
-        </div>
-      ) : (
+      {/* TAB: Entradas */}
+      {tab === 'entries' && (
         <>
-          {/* ── Filtros ── */}
-          <div className="card shadow-none border-dashed space-y-2.5">
-            <div className="flex flex-wrap gap-2 items-center">
-              <Filter size={13} className="text-gray-400" />
-              <select
-                className="input-psych text-sm flex-1 min-w-[140px] dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                value={filterTag}
-                onChange={(e) => { setFilterTag(e.target.value); setSelectedDay(null) }}
-              >
-                <option value="">Todas las etiquetas</option>
-                {AVAILABLE_TAGS.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-              {(filterTag || selectedDay) && (
-                <button onClick={() => { setFilterTag(''); setSelectedDay(null) }}
-                  className="text-xs text-gray-400 hover:text-gray-600 underline">
-                  Limpiar
-                </button>
+          {/* Calendario de ánimo */}
+          {entries.length > 0 && (
+            <div>
+              <MoodCalendar
+                entries={entries}
+                onDayClick={handleDayClick}
+                selectedDate={selectedDay}
+                mode="patient"
+              />
+              {selectedDay && (
+                <div className="flex items-center justify-between mt-2 px-1">
+                  <p className="text-xs text-sage-600 dark:text-sage-400 font-semibold">
+                    📅 {selectedDay.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </p>
+                  <button onClick={() => setSelectedDay(null)} className="text-xs text-gray-400 hover:text-gray-600 underline">
+                    Ver todo
+                  </button>
+                </div>
               )}
             </div>
-            <p className="text-xs text-gray-400">{filtered.length} entradas</p>
-          </div>
+          )}
 
-          {/* ── Lista ── */}
-          <div className="space-y-2">
-            {filtered.length === 0 && (
-              <div className="text-center py-8 text-gray-400 text-sm">
-                {selectedDay ? 'Sin anotaciones ese día.' : 'Sin entradas con estos filtros.'}
-              </div>
-            )}
-            {filtered.map((entry) => {
-              const canEdit = isEditable(entry.createdAt)
-              const open = expanded === entry.id
-              const config = MOOD_ICONS[entry.moodScore]
+          {entries.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">📔</div>
+              <h2 className="text-xl font-bold text-gray-700 dark:text-white mb-2">Historial vacío</h2>
+              <p className="text-gray-400">Tus anotaciones aparecerán aquí.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filtered.length === 0 && (
+                <div className="text-center py-8 text-gray-400 text-sm">
+                  {selectedDay ? 'Sin anotaciones ese día.' : 'Sin entradas.'}
+                </div>
+              )}
+              {filtered.map((entry) => {
+                const canEdit = isEditable(entry.createdAt)
+                const open = expanded === entry.id
+                const config = MOOD_ICONS[entry.moodScore]
+                const entryHabits = habits.filter(h => (entry.completedHabits || []).includes(h.id))
 
-              return (
-                <div
-                  key={entry.id}
-                  className="card cursor-pointer hover:shadow-md transition-all duration-200"
-                >
-                  <div className="flex items-center gap-3" onClick={() => setExpanded(open ? null : entry.id)}>
-                    <div
-                      className="w-14 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-sm"
-                      style={{ backgroundColor: config?.bg, border: `1px solid ${config?.color}40` }}
-                    >
-                      <MoodIcon score={entry.moodScore} size={22} />
-                      <span className="text-xs font-bold mt-0.5" style={{ color: config?.color }}>{entry.moodScore}/10</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-bold mb-0.5 flex flex-wrap items-center gap-1.5">
-                        <span className="capitalize" style={{ color: config?.color }}>
-                          {new Date(entry.createdAt).toLocaleDateString('es-AR', { weekday: 'long' })}
-                        </span>
-                        <span className="text-gray-500 dark:text-gray-400 font-normal text-xs">
-                          {new Date(entry.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
-                        </span>
+                return (
+                  <div key={entry.id} className="card cursor-pointer hover:shadow-md transition-all duration-200">
+                    <div className="flex items-center gap-3" onClick={() => setExpanded(open ? null : entry.id)}>
+                      <div
+                        className="w-14 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-sm"
+                        style={{ backgroundColor: config?.bg, border: `1px solid ${config?.color}40` }}
+                      >
+                        <MoodIcon score={entry.moodScore} size={22} />
+                        <span className="text-xs font-bold mt-0.5" style={{ color: config?.color }}>{entry.moodScore}/10</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-xs text-gray-700 dark:text-gray-300">{config?.label}</span>
-                      </div>
-                      {!open && <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{entry.content || '(Prefiere contarlo en sesión)'}</p>}
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {canEdit && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDelete(entry.id) }}
-                          disabled={deleting === entry.id}
-                          className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      )}
-                      {open ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
-                    </div>
-                  </div>
-
-                  {open && (
-                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 animate-fade-in">
-                      <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{entry.content}</p>
-                      {entry.tags?.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-3">
-                          {entry.tags.map((t) => <span key={t} className="tag">{t}</span>)}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold mb-0.5 flex flex-wrap items-center gap-1.5">
+                          <span className="capitalize" style={{ color: config?.color }}>
+                            {new Date(entry.createdAt).toLocaleDateString('es-AR', { weekday: 'long' })}
+                          </span>
+                          <span className="text-gray-500 dark:text-gray-400 font-normal text-xs">
+                            {new Date(entry.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
+                          </span>
                         </div>
-                      )}
-                        {!canEdit && (
-                          <div className="mt-3">
-                            <p className="flex items-center gap-1 text-xs text-gray-400"><Clock size={11} /> Solo editable en las primeras 24h</p>
+                        <span className="font-semibold text-xs text-gray-700 dark:text-gray-300">{config?.label}</span>
+                        {/* Hábitos completados (resumen) */}
+                        {!open && entryHabits.length > 0 && (
+                          <div className="flex gap-1 mt-1 flex-wrap">
+                            {entryHabits.slice(0, 3).map(h => (
+                              <span key={h.id} className="text-xs">{h.emoji}</span>
+                            ))}
+                            {entryHabits.length > 3 && (
+                              <span className="text-xs text-gray-400">+{entryHabits.length - 3}</span>
+                            )}
                           </div>
                         )}
+                        {!open && <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{entry.content || '(Sin texto)'}</p>}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {canEdit && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDelete(entry.id) }}
+                            disabled={deleting === entry.id}
+                            className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                        {open ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
+                      </div>
                     </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+
+                    {open && (
+                      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 animate-fade-in space-y-3">
+                        {entry.content && (
+                          <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{entry.content}</p>
+                        )}
+                        {entryHabits.length > 0 && (
+                          <div>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hábitos completados</p>
+                            <div className="flex flex-wrap gap-2">
+                              {entryHabits.map(h => (
+                                <span key={h.id} className="text-xs px-3 py-1.5 rounded-full bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-300 font-medium">
+                                  {h.emoji} {h.text}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {!canEdit && (
+                          <p className="flex items-center gap-1 text-xs text-gray-400">
+                            <Clock size={11} /> Solo editable en las primeras 24h
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </>
       )}
     </div>
