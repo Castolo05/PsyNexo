@@ -11,6 +11,8 @@
     "lucide-react": "^0.400.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-grid-layout": "^1.4.4",
+    "react-resizable": "^3.0.5",
     "react-router-dom": "^6.24.1",
     "recharts": "^2.12.7"
   },

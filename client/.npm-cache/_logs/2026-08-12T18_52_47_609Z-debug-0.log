@@ -38,3 +38,41 @@
 37 silly fetch manifest react-grid-layout@*
 38 timing arborist:ctor Completed in 0ms
 39 silly fetch manifest react-resizable@*
+40 silly placeDep ROOT react-grid-layout@ OK for: nexomente-client@1.0.0 want: *
+41 silly placeDep ROOT react-resizable@ OK for: nexomente-client@1.0.0 want: *
+42 timing idealTree:#root Completed in 140360ms
+43 timing idealTree:node_modules/react-grid-layout Completed in 0ms
+44 timing idealTree:node_modules/react-resizable Completed in 0ms
+45 timing idealTree:buildDeps Completed in 140363ms
+46 timing idealTree:fixDepFlags Completed in 4ms
+47 timing idealTree Completed in 140619ms
+48 timing command:install Completed in 140628ms
+49 verbose type system
+50 verbose stack FetchError: request to https://registry.npmjs.org/react-grid-layout failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org
+50 verbose stack     at ClientRequest.<anonymous> (/usr/share/nodejs/minipass-fetch/lib/index.js:130:14)
+50 verbose stack     at ClientRequest.emit (node:events:517:28)
+50 verbose stack     at TLSSocket.socketErrorListener (node:_http_client:501:9)
+50 verbose stack     at TLSSocket.emit (node:events:529:35)
+50 verbose stack     at emitErrorNT (node:internal/streams/destroy:151:8)
+50 verbose stack     at emitErrorCloseNT (node:internal/streams/destroy:116:3)
+50 verbose stack     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+51 verbose cwd /home/fausto/Escritorio/Carpeta sin título/client
+52 verbose Linux 7.0.0-28-generic
+53 verbose node v18.19.1
+54 verbose npm  v9.2.0
+55 error code ENOTFOUND
+56 error syscall getaddrinfo
+57 error errno ENOTFOUND
+58 error network request to https://registry.npmjs.org/react-grid-layout failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org
+59 error network This is a problem related to network connectivity.
+59 error network In most cases you are behind a proxy or have bad network settings.
+59 error network
+59 error network If you are behind a proxy, please make sure that the
+59 error network 'proxy' config is set properly.  See: 'npm help config'
+60 verbose exit 1
+61 timing npm Completed in 140709ms
+62 verbose unfinished npm timer reify 1786560767681
+63 verbose unfinished npm timer reify:loadTrees 1786560767683
+64 verbose code 1
+65 error A complete log of this run can be found in:
+65 error     /home/fausto/Escritorio/Carpeta sin título/client/.npm-cache/_logs/2026-08-12T18_52_47_609Z-debug-0.log
