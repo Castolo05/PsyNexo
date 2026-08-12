@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import api from '../../lib/api'
-import { MOOD_ICONS, formatDate, isEditable } from '../../lib/constants'
+import { MOOD_ICONS, HABIT_ICONS, formatDate, isEditable } from '../../lib/constants'
 import MoodIcon from '../../components/MoodIcon'
 import MoodCalendar from '../../components/MoodCalendar'
-import { Trash2, ChevronDown, ChevronUp, Clock, TrendingUp, TrendingDown, Minus, BarChart2 } from 'lucide-react'
+import { Trash2, ChevronDown, ChevronUp, Clock, TrendingUp, TrendingDown, Minus, BarChart2, Book, Calendar } from 'lucide-react'
 
 // ── Tarjeta de correlación hábito-ánimo ──────────────────
 function HabitCorrelationCard({ data }) {
@@ -34,11 +34,15 @@ function HabitCorrelationCard({ data }) {
           const withPct  = item.avgWith    ? (item.avgWith    / 10) * 100 : 0
           const withoutPct = item.avgWithout ? (item.avgWithout / 10) * 100 : 0
 
+          const IconComp = HABIT_ICONS[item.icon] || HABIT_ICONS.CheckCircle
+
           return (
             <div key={item.habitId} className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{item.emoji}</span>
+                  <span className="p-1.5 rounded-lg bg-white dark:bg-gray-800 text-sage-500 shadow-sm border border-gray-100 dark:border-gray-600">
+                    <IconComp size={16} />
+                  </span>
                   <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{item.text}</span>
                 </div>
                 <div className={`flex items-center gap-1 text-sm font-bold ${impactColor}`}>
@@ -164,23 +168,23 @@ export default function HistoryPage() {
       <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl">
         <button
           onClick={() => setTab('entries')}
-          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
             tab === 'entries'
               ? 'bg-white dark:bg-gray-700 text-sage-600 shadow-sm'
               : 'text-gray-500 dark:text-gray-400'
           }`}
         >
-          📔 Entradas
+          <Book size={16} /> Entradas
         </button>
         <button
           onClick={() => setTab('correlation')}
-          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
             tab === 'correlation'
               ? 'bg-white dark:bg-gray-700 text-sage-600 shadow-sm'
               : 'text-gray-500 dark:text-gray-400'
           }`}
         >
-          📊 Hábitos y ánimo
+          <BarChart2 size={16} /> Hábitos y ánimo
         </button>
       </div>
 
@@ -211,8 +215,8 @@ export default function HistoryPage() {
               />
               {selectedDay && (
                 <div className="flex items-center justify-between mt-2 px-1">
-                  <p className="text-xs text-sage-600 dark:text-sage-400 font-semibold">
-                    📅 {selectedDay.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  <p className="text-xs text-sage-600 dark:text-sage-400 font-semibold flex items-center gap-1">
+                    <Calendar size={14} /> {selectedDay.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
                   </p>
                   <button onClick={() => setSelectedDay(null)} className="text-xs text-gray-400 hover:text-gray-600 underline">
                     Ver todo
@@ -224,7 +228,7 @@ export default function HistoryPage() {
 
           {entries.length === 0 ? (
             <div className="text-center py-16">
-              <div className="text-6xl mb-4">📔</div>
+              <Book size={48} className="mx-auto mb-4 text-gray-300" />
               <h2 className="text-xl font-bold text-gray-700 dark:text-white mb-2">Historial vacío</h2>
               <p className="text-gray-400">Tus anotaciones aparecerán aquí.</p>
             </div>
@@ -264,9 +268,10 @@ export default function HistoryPage() {
                         {/* Hábitos completados (resumen) */}
                         {!open && entryHabits.length > 0 && (
                           <div className="flex gap-1 mt-1 flex-wrap">
-                            {entryHabits.slice(0, 3).map(h => (
-                              <span key={h.id} className="text-xs">{h.emoji}</span>
-                            ))}
+                            {entryHabits.slice(0, 3).map(h => {
+                              const IconComp = HABIT_ICONS[h.icon] || HABIT_ICONS.CheckCircle
+                              return <span key={h.id} className="p-1 bg-gray-100 dark:bg-gray-800 rounded-md text-sage-500"><IconComp size={12} /></span>
+                            })}
                             {entryHabits.length > 3 && (
                               <span className="text-xs text-gray-400">+{entryHabits.length - 3}</span>
                             )}
@@ -297,11 +302,14 @@ export default function HistoryPage() {
                           <div>
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hábitos completados</p>
                             <div className="flex flex-wrap gap-2">
-                              {entryHabits.map(h => (
-                                <span key={h.id} className="text-xs px-3 py-1.5 rounded-full bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-300 font-medium">
-                                  {h.emoji} {h.text}
-                                </span>
-                              ))}
+                              {entryHabits.map(h => {
+                                const IconComp = HABIT_ICONS[h.icon] || HABIT_ICONS.CheckCircle
+                                return (
+                                  <span key={h.id} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-300 font-medium">
+                                    <IconComp size={14} /> {h.text}
+                                  </span>
+                                )
+                              })}
                             </div>
                           </div>
                         )}

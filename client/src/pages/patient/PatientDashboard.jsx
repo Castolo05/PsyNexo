@@ -5,7 +5,7 @@ import {
   TrendingUp, CheckCircle2, Save, X, Edit2,
 } from 'lucide-react'
 import api from '../../lib/api'
-import { MOOD_ICONS, formatDateShort, isSameDay, isEditable } from '../../lib/constants'
+import { MOOD_ICONS, HABIT_ICONS, formatDateShort, isSameDay, isEditable } from '../../lib/constants'
 import MoodIcon from '../../components/MoodIcon'
 import MoodChart from '../../components/MoodChart'
 
@@ -108,6 +108,7 @@ function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], ha
           <div className="space-y-2">
             {habits.map(habit => {
               const done = completedHabits.includes(habit.id)
+              const IconComp = HABIT_ICONS[habit.icon] || HABIT_ICONS.CheckCircle
               return (
                 <button
                   key={habit.id}
@@ -119,7 +120,9 @@ function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], ha
                       : 'border-gray-200 dark:border-gray-600 hover:border-sage-300'
                   }`}
                 >
-                  <span className="text-xl">{habit.emoji}</span>
+                  <span className={`p-1.5 rounded-lg ${done ? 'bg-white dark:bg-sage-800 text-sage-500 shadow-sm' : 'text-gray-400'}`}>
+                    <IconComp size={18} />
+                  </span>
                   <span className={`flex-1 text-sm font-semibold ${
                     done ? 'text-sage-700 dark:text-sage-300' : 'text-gray-600 dark:text-gray-300'
                   }`}>{habit.text}</span>
@@ -342,11 +345,13 @@ export default function PatientDashboard() {
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {todayEntry.completedHabits.map(hId => {
                   const h = habits.find(x => x.id === hId)
-                  return h ? (
-                    <span key={hId} className="text-xs px-2.5 py-1 rounded-full bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-300 font-medium">
-                      {h.emoji} {h.text}
+                  if (!h) return null
+                  const IconComp = HABIT_ICONS[h.icon] || HABIT_ICONS.CheckCircle
+                  return (
+                    <span key={hId} className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-300 font-medium">
+                      <IconComp size={12} /> {h.text}
                     </span>
-                  ) : null
+                  )
                 })}
               </div>
             )}

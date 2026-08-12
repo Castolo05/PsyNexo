@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../lib/api'
-import { UserRound, Link2, LogOut, Plus, Pencil, Trash2, Check, X } from 'lucide-react'
+import { UserRound, Link2, LogOut, Plus, Pencil, Trash2, Check, X, CheckCircle2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-
-const EMOJI_OPTIONS = ['💧','📖','🚶','👥','🏃','🧘','🍎','🌞','😴','✍️','🎵','🚴','💪','🌿','❤️','🧹','🎨','📝']
+import { HABIT_ICONS } from '../../lib/constants'
 
 export default function PatientProfile() {
   const { user, logout, updateUser } = useAuth()
@@ -17,11 +16,11 @@ export default function PatientProfile() {
   // Hábitos
   const [habits, setHabits] = useState([])
   const [newText, setNewText] = useState('')
-  const [newEmoji, setNewEmoji] = useState('✅')
+  const [newIcon, setNewIcon] = useState('CheckCircle')
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [editText, setEditText] = useState('')
-  const [editEmoji, setEditEmoji] = useState('')
+  const [editIcon, setEditIcon] = useState('')
 
   useEffect(() => {
     api.get('/habits').then(({ data }) => setHabits(data.habits)).catch(console.error)
@@ -47,17 +46,17 @@ export default function PatientProfile() {
   const handleAddHabit = async () => {
     if (!newText.trim()) return
     try {
-      const { data } = await api.post('/habits', { text: newText.trim(), emoji: newEmoji })
+      const { data } = await api.post('/habits', { text: newText.trim(), icon: newIcon })
       setHabits(prev => [...prev, data.habit])
       setNewText('')
-      setNewEmoji('✅')
+      setNewIcon('CheckCircle')
       setAdding(false)
     } catch { alert('Error al crear hábito.') }
   }
 
   const handleSaveEdit = async (id) => {
     try {
-      const { data } = await api.put(`/habits/${id}`, { text: editText, emoji: editEmoji })
+      const { data } = await api.put(`/habits/${id}`, { text: editText, icon: editIcon })
       setHabits(prev => prev.map(h => h.id === id ? data.habit : h))
       setEditingId(null)
     } catch { alert('Error al guardar.') }
@@ -70,6 +69,27 @@ export default function PatientProfile() {
       setHabits(prev => prev.filter(h => h.id !== id))
     } catch { alert('Error al eliminar.') }
   }
+
+  const IconSelector = ({ value, onChange }) => (
+    <div className="flex items-center gap-1 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-sage-200">
+      {Object.keys(HABIT_ICONS).map(iconName => {
+        const Icon = HABIT_ICONS[iconName]
+        return (
+          <button
+            key={iconName}
+            onClick={() => onChange(iconName)}
+            className={`p-2 rounded-xl shrink-0 transition-colors ${
+              value === iconName
+                ? 'bg-sage-400 text-white shadow-sm'
+                : 'bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-sage-50 dark:hover:bg-gray-600'
+            }`}
+          >
+            <Icon size={18} />
+          </button>
+        )
+      })}
+    </div>
+  )
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -102,21 +122,14 @@ export default function PatientProfile() {
         {/* Formulario nuevo hábito */}
         {adding && (
           <div className="bg-sage-50 dark:bg-sage-900/20 rounded-2xl p-4 space-y-3 animate-fade-in border border-sage-200 dark:border-sage-800">
+            <IconSelector value={newIcon} onChange={setNewIcon} />
             <div className="flex gap-2">
-              <select
-                className="input text-xl text-center w-16 px-1 shrink-0"
-                value={newEmoji}
-                onChange={e => setNewEmoji(e.target.value)}
-              >
-                {EMOJI_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}
-              </select>
               <input
                 className="input flex-1"
                 placeholder="Ej: Meditar 5 minutos"
                 value={newText}
                 onChange={e => setNewText(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleAddHabit()}
-                autoFocus
               />
             </div>
             <div className="flex gap-2">
@@ -137,51 +150,52 @@ export default function PatientProfile() {
           </p>
         )}
         <div className="space-y-2">
-          {habits.map(habit => (
-            <div key={habit.id} className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 rounded-2xl px-4 py-3">
-              {editingId === habit.id ? (
-                <>
-                  <select
-                    className="text-xl text-center w-12 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
-                    value={editEmoji}
-                    onChange={e => setEditEmoji(e.target.value)}
-                  >
-                    {EMOJI_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}
-                  </select>
-                  <input
-                    className="input flex-1 py-1.5 text-sm"
-                    value={editText}
-                    onChange={e => setEditText(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleSaveEdit(habit.id)}
-                    autoFocus
-                  />
-                  <button onClick={() => handleSaveEdit(habit.id)} className="p-1.5 text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 rounded-lg">
-                    <Check size={16} />
-                  </button>
-                  <button onClick={() => setEditingId(null)} className="p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-                    <X size={16} />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <span className="text-xl">{habit.emoji}</span>
-                  <span className="flex-1 text-sm font-semibold text-gray-700 dark:text-gray-200">{habit.text}</span>
-                  <button
-                    onClick={() => { setEditingId(habit.id); setEditText(habit.text); setEditEmoji(habit.emoji) }}
-                    className="p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
-                  >
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(habit.id)}
-                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </>
-              )}
-            </div>
-          ))}
+          {habits.map(habit => {
+            const IconComponent = HABIT_ICONS[habit.icon] || HABIT_ICONS.CheckCircle
+            
+            return (
+              <div key={habit.id} className="flex flex-col gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-2xl px-4 py-3">
+                {editingId === habit.id ? (
+                  <>
+                    <IconSelector value={editIcon} onChange={setEditIcon} />
+                    <div className="flex items-center gap-2">
+                      <input
+                        className="input flex-1 py-1.5 text-sm"
+                        value={editText}
+                        onChange={e => setEditText(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleSaveEdit(habit.id)}
+                      />
+                      <button onClick={() => handleSaveEdit(habit.id)} className="p-1.5 text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 rounded-lg">
+                        <Check size={16} />
+                      </button>
+                      <button onClick={() => setEditingId(null)} className="p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <span className="text-sage-500 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-600">
+                      <IconComponent size={20} />
+                    </span>
+                    <span className="flex-1 text-sm font-semibold text-gray-700 dark:text-gray-200">{habit.text}</span>
+                    <button
+                      onClick={() => { setEditingId(habit.id); setEditText(habit.text); setEditIcon(habit.icon) }}
+                      className="p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(habit.id)}
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -191,8 +205,8 @@ export default function PatientProfile() {
           <Link2 size={18} /> Vinculación con psicólogo
         </h2>
         {user?.psychologistId ? (
-          <div className="bg-sage-50 dark:bg-sage-900/20 text-sage-700 dark:text-sage-300 rounded-xl px-4 py-3 text-sm font-medium">
-            ✅ Ya estás vinculado con tu psicólogo
+          <div className="bg-sage-50 dark:bg-sage-900/20 text-sage-700 dark:text-sage-300 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-sage-500" /> Ya estás vinculado con tu psicólogo
           </div>
         ) : (
           <>

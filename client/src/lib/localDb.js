@@ -16,7 +16,7 @@ const KEYS = {
   appointments: 'nexo_db_appointments',
   goals:        'nexo_db_goals',
   habits:       'nexo_db_habits',
-  seeded:       'nexo_db_seeded_v3', // v3: 90 días de datos
+  seeded:       'nexo_db_seeded_v4', // v4: iconos en lugar de emojis
 }
 
 // ── Helpers de lectura/escritura ──────────────────────────
@@ -57,10 +57,10 @@ function generateDemoData() {
 
   // Hábitos de demo para Carlos
   const habits = [
-    { id: 'habit_1', userId: patientId, text: 'Tomar 2 litros de agua', emoji: '💧', order: 0, createdAt: new Date(Date.now() - 90 * 86400000).toISOString() },
-    { id: 'habit_2', userId: patientId, text: 'Leer 10 minutos', emoji: '📖', order: 1, createdAt: new Date(Date.now() - 90 * 86400000).toISOString() },
-    { id: 'habit_3', userId: patientId, text: 'Salir a pasear', emoji: '🚶', order: 2, createdAt: new Date(Date.now() - 90 * 86400000).toISOString() },
-    { id: 'habit_4', userId: patientId, text: 'Juntarme con amigos', emoji: '👥', order: 3, createdAt: new Date(Date.now() - 90 * 86400000).toISOString() },
+    { id: 'habit_1', userId: patientId, text: 'Tomar 2 litros de agua', icon: 'Droplet', order: 0, createdAt: new Date(Date.now() - 90 * 86400000).toISOString() },
+    { id: 'habit_2', userId: patientId, text: 'Leer 10 minutos', icon: 'BookOpen', order: 1, createdAt: new Date(Date.now() - 90 * 86400000).toISOString() },
+    { id: 'habit_3', userId: patientId, text: 'Salir a pasear', icon: 'Footprints', order: 2, createdAt: new Date(Date.now() - 90 * 86400000).toISOString() },
+    { id: 'habit_4', userId: patientId, text: 'Juntarme con amigos', icon: 'Users', order: 3, createdAt: new Date(Date.now() - 90 * 86400000).toISOString() },
   ]
 
   // ── Generador de 90 días de datos realistas ───────────────
@@ -615,14 +615,14 @@ export function habitsList(userId) {
     .sort((a, b) => a.order - b.order)
 }
 
-export function habitCreate(userId, { text, emoji = '✅' }) {
+export function habitCreate(userId, { text, icon = 'CheckCircle' }) {
   const all = read(KEYS.habits)
   const userHabits = all.filter(h => h.userId === userId)
   const habit = {
     id: genId(),
     userId,
     text,
-    emoji,
+    icon,
     order: userHabits.length,
     createdAt: new Date().toISOString(),
   }
@@ -631,12 +631,12 @@ export function habitCreate(userId, { text, emoji = '✅' }) {
   return habit
 }
 
-export function habitUpdate(userId, habitId, { text, emoji }) {
+export function habitUpdate(userId, habitId, { text, icon }) {
   const all = read(KEYS.habits)
   const idx = all.findIndex(h => h.id === habitId && h.userId === userId)
   if (idx === -1) throw new Error('Hábito no encontrado.')
   if (text !== undefined) all[idx].text = text
-  if (emoji !== undefined) all[idx].emoji = emoji
+  if (icon !== undefined) all[idx].icon = icon
   write(KEYS.habits, all)
   return all[idx]
 }
@@ -672,7 +672,7 @@ export function habitCorrelation(userId) {
     return {
       habitId:    habit.id,
       text:       habit.text,
-      emoji:      habit.emoji,
+      icon:       habit.icon,
       avgWith,
       avgWithout,
       impact,       // positivo = mejora el ánimo, negativo = lo baja

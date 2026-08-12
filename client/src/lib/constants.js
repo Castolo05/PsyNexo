@@ -17,6 +17,29 @@ export const MOOD_ICONS = {
 }
 
 // Color semáforo para gráficos (Recharts dot color)
+import {
+  Droplet, BookOpen, Footprints, Users, Activity, Heart,
+  Coffee, Music, Sun, Moon, Dumbbell, Leaf, Smile, Star, CheckCircle
+} from 'lucide-react'
+
+export const HABIT_ICONS = {
+  Droplet: Droplet,
+  BookOpen: BookOpen,
+  Footprints: Footprints,
+  Users: Users,
+  Activity: Activity,
+  Heart: Heart,
+  Coffee: Coffee,
+  Music: Music,
+  Sun: Sun,
+  Moon: Moon,
+  Dumbbell: Dumbbell,
+  Leaf: Leaf,
+  Smile: Smile,
+  Star: Star,
+  CheckCircle: CheckCircle,
+}
+
 export const MOOD_CHART_COLOR = (score) => {
   if (score <= 2) return '#dc2626'
   if (score <= 4) return '#d97706'
