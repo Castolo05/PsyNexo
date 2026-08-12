@@ -1,62 +1,72 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { Responsive, WidthProvider } from 'react-grid-layout'
 import api from '../../lib/api'
-import { MOOD_ICONS, formatDate, formatDateShort } from '../../lib/constants'
+import { MOOD_ICONS, formatDate } from '../../lib/constants'
 import MoodIcon from '../../components/MoodIcon'
 import MoodChart from '../../components/MoodChart'
 import {
   ArrowLeft, TrendingUp, TrendingDown, Minus, Plus,
-  Bookmark, AlertTriangle, Wifi, Target,
-  CheckCircle2, Circle, Trash2, ChevronDown, ChevronUp,
-  Save, X, Filter, Calendar,
+  Wifi, Target, CheckCircle2, Circle, Trash2, ChevronDown, ChevronUp,
+  Save, X, Calendar, Layout, Eye, EyeOff
 } from 'lucide-react'
+
+const ResponsiveGridLayout = WidthProvider(Responsive)
+
+// ── Wrapper para paneles modulares ────────────────────────
+function PanelWrapper({ title, icon: Icon, onHide, children, className = '' }) {
+  return (
+    <div className={`card-psych dark:bg-gray-800 h-full flex flex-col p-0 overflow-hidden ${className}`}>
+      <div className="draggable-handle cursor-move flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+        <div className="flex items-center gap-2">
+          {Icon && <Icon size={16} className="text-indigo-500" />}
+          <span className="text-sm font-bold text-gray-700 dark:text-gray-200">{title}</span>
+        </div>
+        <button onMouseDown={(e) => e.stopPropagation()} onClick={onHide} className="text-gray-400 hover:text-red-500 transition-colors" title="Ocultar panel">
+          <EyeOff size={14} />
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto no-scrollbar p-4">
+        {children}
+      </div>
+    </div>
+  )
+}
 
 // ── Ficha pre-sesión ──────────────────────────────────────
 function PreSessionCard({ insights }) {
-  if (!insights) return null
-  const { avgThisWeek, avgLastWeek, trend, entriesThisWeek } = insights
+  if (!insights) return <p className="text-gray-400 text-sm">Cargando datos...</p>
+  const { avgThisWeek, trend } = insights
 
   const trendNum = trend ? parseFloat(trend) : 0
   const TrendIcon = trendNum > 0 ? TrendingUp : trendNum < 0 ? TrendingDown : Minus
   const trendColor = trendNum > 0 ? 'text-emerald-600' : trendNum < 0 ? 'text-red-500' : 'text-gray-400'
 
   return (
-    <div className="card-psych dark:bg-gray-800 border-l-4 border-l-indigo-400">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-        <span className="text-xs font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest">
-          Ficha Pre-Sesión
-        </span>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 mb-3">
-        {/* Promedio semana actual */}
-        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
-          <p className="text-xs text-gray-400 mb-1">Esta semana</p>
-          {avgThisWeek ? (
-            <>
-              <p className="text-2xl font-black text-gray-800 dark:text-white">{avgThisWeek}</p>
-              <div className="flex items-center justify-center gap-1 mt-0.5">
-                <MoodIcon score={Math.round(parseFloat(avgThisWeek))} size={12} />
-              </div>
-            </>
-          ) : <p className="text-gray-400 text-sm">—</p>}
-        </div>
-
-        {/* Tendencia vs semana anterior */}
-        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
-          <p className="text-xs text-gray-400 mb-1">vs. semana anterior</p>
-          {trend ? (
-            <div className={`flex items-center justify-center gap-1 ${trendColor}`}>
-              <TrendIcon size={22} />
-              <span className="text-2xl font-black">{trendNum > 0 ? '+' : ''}{trend}</span>
+    <div className="grid grid-cols-2 gap-3 h-full">
+      {/* Promedio semana actual */}
+      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 flex flex-col items-center justify-center text-center h-full">
+        <p className="text-xs text-gray-400 mb-1">Esta semana</p>
+        {avgThisWeek ? (
+          <>
+            <p className="text-2xl font-black text-gray-800 dark:text-white">{avgThisWeek}</p>
+            <div className="flex items-center justify-center gap-1 mt-0.5">
+              <MoodIcon score={Math.round(parseFloat(avgThisWeek))} size={12} />
             </div>
-          ) : <p className="text-gray-400 text-sm">Insuf. datos</p>}
-        </div>
+          </>
+        ) : <p className="text-gray-400 text-sm">—</p>}
       </div>
 
-
-
+      {/* Tendencia vs semana anterior */}
+      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 flex flex-col items-center justify-center text-center h-full">
+        <p className="text-xs text-gray-400 mb-1">vs. sem. anterior</p>
+        {trend ? (
+          <div className={`flex items-center justify-center gap-1 ${trendColor}`}>
+            <TrendIcon size={22} />
+            <span className="text-2xl font-black">{trendNum > 0 ? '+' : ''}{trend}</span>
+          </div>
+        ) : <p className="text-gray-400 text-sm">Insuf. datos</p>}
+      </div>
     </div>
   )
 }
@@ -67,7 +77,7 @@ function SessionNotes({ patientId }) {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [expanded, setExpanded] = useState(null)
-  const [editing, setEditing] = useState(null) // noteId being edited
+  const [editing, setEditing] = useState(null)
   const [editContent, setEditContent] = useState('')
   const [editTitle, setEditTitle] = useState('')
   const [newTitle, setNewTitle] = useState('')
@@ -117,110 +127,77 @@ function SessionNotes({ patientId }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-bold text-gray-800 dark:text-white text-sm flex items-center gap-1.5">
-          <Calendar size={14} /> Notas de sesión
-          <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 px-1.5 py-0.5 rounded-full ml-1">{notes.length}</span>
-        </h3>
-        <button
-          onClick={() => setCreating(!creating)}
-          className="btn-psych text-xs py-1.5 px-3 flex items-center gap-1"
-        >
-          <Plus size={13} /> Nueva sesión
+        <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 px-2 py-0.5 rounded-full font-bold">{notes.length} notas</span>
+        <button onClick={() => setCreating(!creating)} className="btn-psych py-1 px-2.5 text-[11px] flex items-center gap-1">
+          <Plus size={12} /> Nueva
         </button>
       </div>
 
-      {/* Formulario nueva nota */}
       {creating && (
-        <div className="card-psych dark:bg-gray-800 mb-3 animate-slide-up border-l-4 border-l-indigo-400">
+        <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-xl mb-3 border border-indigo-100 dark:border-indigo-800/30">
           <input
-            className="input-psych dark:bg-gray-700 dark:border-gray-600 dark:text-white mb-2"
+            className="input-psych dark:bg-gray-800 dark:border-gray-600 dark:text-white mb-2 text-xs"
             placeholder={`Título (ej: Sesión ${new Date().toLocaleDateString('es-AR')})`}
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
           />
           <textarea
-            className="input-psych dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none h-32"
-            placeholder="Notas de esta sesión, temas trabajados, tarea asignada..."
+            className="input-psych dark:bg-gray-800 dark:border-gray-600 dark:text-white resize-none h-24 text-xs"
+            placeholder="Temas trabajados, tareas..."
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
             autoFocus
           />
           <div className="flex gap-2 mt-2 justify-end">
-            <button onClick={() => setCreating(false)} className="btn-ghost text-xs py-1.5 px-3 flex items-center gap-1">
-              <X size={13} /> Cancelar
-            </button>
-            <button onClick={handleCreate} disabled={saving || !newContent.trim()} className="btn-psych text-xs py-1.5 px-3 flex items-center gap-1">
-              <Save size={13} /> {saving ? 'Guardando...' : 'Guardar'}
+            <button onClick={() => setCreating(false)} className="btn-ghost text-[11px] py-1 px-2">Cancelar</button>
+            <button onClick={handleCreate} disabled={saving || !newContent.trim()} className="btn-psych text-[11px] py-1 px-2">
+              {saving ? '...' : 'Guardar'}
             </button>
           </div>
         </div>
       )}
 
-      {loading && <div className="animate-pulse space-y-2">{[...Array(2)].map((_, i) => <div key={i} className="h-14 bg-gray-100 dark:bg-gray-800 rounded-xl" />)}</div>}
-
-      {!loading && notes.length === 0 && (
-        <p className="text-center text-gray-400 text-sm py-4">Sin notas de sesión. Crea la primera →</p>
-      )}
+      {loading && <div className="animate-pulse space-y-2">{[...Array(2)].map((_, i) => <div key={i} className="h-14 bg-gray-100 dark:bg-gray-700/50 rounded-xl" />)}</div>}
 
       <div className="space-y-2">
         {notes.map((note) => {
           const isOpen = expanded === note.id
           const isEditing = editing === note.id
           return (
-            <div key={note.id} className="card-psych dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-              <div className="flex items-center gap-2 cursor-pointer" onClick={() => !isEditing && setExpanded(isOpen ? null : note.id)}>
+            <div key={note.id} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl">
+              <div className="flex items-center gap-2 p-3 cursor-pointer" onClick={() => !isEditing && setExpanded(isOpen ? null : note.id)}>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-800 dark:text-white text-sm truncate">
+                  <p className="font-semibold text-gray-800 dark:text-white text-xs truncate">
                     {note.title || 'Sin título'}
                   </p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(note.sessionDate).toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
+                  <p className="text-[10px] text-gray-400">
+                    {new Date(note.sessionDate).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setEditing(note.id); setEditTitle(note.title); setEditContent(note.content)
-                      setExpanded(note.id)
-                    }}
-                    className="p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
-                  >
-                    <Save size={14} />
+                  <button onClick={(e) => { e.stopPropagation(); setEditing(note.id); setEditTitle(note.title); setEditContent(note.content); setExpanded(note.id) }} className="p-1 text-gray-400 hover:text-indigo-500 rounded-lg">
+                    <Save size={12} />
                   </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(note.id) }}
-                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                  >
-                    <Trash2 size={14} />
+                  <button onClick={(e) => { e.stopPropagation(); handleDelete(note.id) }} className="p-1 text-gray-400 hover:text-red-500 rounded-lg">
+                    <Trash2 size={12} />
                   </button>
-                  {isOpen ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
+                  {isOpen ? <ChevronUp size={12} className="text-gray-400" /> : <ChevronDown size={12} className="text-gray-400" />}
                 </div>
               </div>
 
               {isOpen && (
-                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 animate-fade-in">
+                <div className="px-3 pb-3 border-t border-gray-50 dark:border-gray-700/50 pt-2 animate-fade-in">
                   {isEditing ? (
                     <>
-                      <input
-                        className="input-psych dark:bg-gray-700 dark:border-gray-600 dark:text-white mb-2 text-sm"
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                      />
-                      <textarea
-                        className="input-psych dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none h-28 text-sm"
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                      />
+                      <input className="input-psych dark:bg-gray-700 dark:border-gray-600 dark:text-white mb-2 text-xs" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                      <textarea className="input-psych dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none h-24 text-xs" value={editContent} onChange={(e) => setEditContent(e.target.value)} />
                       <div className="flex gap-2 mt-2 justify-end">
-                        <button onClick={() => setEditing(null)} className="btn-ghost text-xs py-1.5 px-3">Cancelar</button>
-                        <button onClick={() => handleUpdate(note.id)} disabled={saving} className="btn-psych text-xs py-1.5 px-3 flex items-center gap-1">
-                          <Save size={12} /> {saving ? 'Guardando...' : 'Guardar'}
-                        </button>
+                        <button onClick={() => setEditing(null)} className="btn-ghost text-[11px] py-1 px-2">Cancel</button>
+                        <button onClick={() => handleUpdate(note.id)} disabled={saving} className="btn-psych text-[11px] py-1 px-2">Guardar</button>
                       </div>
                     </>
                   ) : (
-                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{note.content}</p>
+                    <p className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{note.content}</p>
                   )}
                 </div>
               )}
@@ -272,56 +249,71 @@ function TherapyGoals({ patientId }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-bold text-gray-800 dark:text-white text-sm flex items-center gap-1.5">
-          <Target size={14} /> Objetivos terapéuticos
-          {goals.length > 0 && <span className="text-xs text-gray-400 font-normal ml-1">{done}/{goals.length}</span>}
-        </h3>
+        {goals.length > 0 ? (
+          <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 px-2 py-0.5 rounded-full font-bold">{done}/{goals.length} listos</span>
+        ) : <span />}
         <button onClick={() => setAdding(!adding)} className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center gap-1">
           <Plus size={12} /> Añadir
         </button>
       </div>
 
       {adding && (
-        <div className="flex gap-2 mb-3 animate-slide-up">
+        <div className="flex gap-2 mb-3">
           <input
-            className="input-psych dark:bg-gray-700 dark:border-gray-600 dark:text-white flex-1 text-sm"
-            placeholder="Ej: Caminar 3 veces por semana"
+            className="input-psych dark:bg-gray-700 dark:border-gray-600 dark:text-white flex-1 text-xs py-1.5 px-2"
+            placeholder="Ej: Caminar..."
             value={newGoal}
             onChange={(e) => setNewGoal(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
             autoFocus
           />
-          <button onClick={handleAdd} className="btn-psych text-xs py-2 px-3">Añadir</button>
-          <button onClick={() => setAdding(false)} className="btn-ghost text-xs py-2 px-2"><X size={14} /></button>
+          <button onClick={handleAdd} className="btn-psych py-1.5 px-2 text-[11px]">Ok</button>
         </div>
       )}
 
-      {goals.length === 0 && !adding && (
-        <p className="text-gray-400 text-sm text-center py-3">Sin objetivos definidos.</p>
-      )}
+      {goals.length === 0 && !adding && <p className="text-gray-400 text-xs text-center py-2">Sin objetivos.</p>}
 
       <div className="space-y-2">
         {goals.map((g) => (
-          <div key={g.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all ${
-            g.completed ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+          <div key={g.id} className={`flex items-center gap-2 p-2 rounded-xl border transition-all ${
+            g.completed ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-white dark:bg-gray-700/50 border-gray-100 dark:border-gray-600'
           }`}>
             <button onClick={() => handleToggle(g.id)} className="shrink-0">
-              {g.completed
-                ? <CheckCircle2 size={18} className="text-emerald-500" />
-                : <Circle size={18} className="text-gray-300 hover:text-emerald-400 transition-colors" />
-              }
+              {g.completed ? <CheckCircle2 size={16} className="text-emerald-500" /> : <Circle size={16} className="text-gray-300" />}
             </button>
-            <span className={`text-sm flex-1 ${g.completed ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-200'}`}>
-              {g.text}
-            </span>
-            <button onClick={() => handleDelete(g.id)} className="shrink-0 p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
-              <Trash2 size={13} />
-            </button>
+            <span className={`text-xs flex-1 ${g.completed ? 'line-through text-gray-400' : 'text-gray-700 dark:text-gray-200'}`}>{g.text}</span>
+            <button onClick={() => handleDelete(g.id)} className="shrink-0 text-gray-300 hover:text-red-500"><Trash2 size={12} /></button>
           </div>
         ))}
       </div>
     </div>
   )
+}
+
+// ── Configuraciones de Grilla ─────────────────────────────
+const PANELS = [
+  { i: 'pre-session', label: 'Ficha Pre-Sesión', icon: TrendingUp },
+  { i: 'mood-chart', label: 'Evolución del Ánimo', icon: Layout },
+  { i: 'entries', label: 'Entradas de Paciente', icon: Calendar },
+  { i: 'goals', label: 'Objetivos Terapéuticos', icon: Target },
+  { i: 'notes', label: 'Notas de Sesión', icon: Save },
+]
+
+const DEFAULT_LAYOUTS = {
+  lg: [
+    { i: 'pre-session', x: 0, y: 0, w: 2, h: 2, minW: 1, minH: 2 },
+    { i: 'mood-chart', x: 0, y: 2, w: 2, h: 4, minW: 1, minH: 3 },
+    { i: 'entries', x: 0, y: 6, w: 2, h: 7, minW: 1, minH: 4 },
+    { i: 'goals', x: 2, y: 0, w: 1, h: 5, minW: 1, minH: 3 },
+    { i: 'notes', x: 2, y: 5, w: 1, h: 8, minW: 1, minH: 4 },
+  ],
+  md: [
+    { i: 'pre-session', x: 0, y: 0, w: 2, h: 2, minW: 1, minH: 2 },
+    { i: 'mood-chart', x: 0, y: 2, w: 2, h: 4, minW: 1, minH: 3 },
+    { i: 'entries', x: 0, y: 6, w: 2, h: 7, minW: 1, minH: 4 },
+    { i: 'goals', x: 0, y: 13, w: 2, h: 5, minW: 1, minH: 3 },
+    { i: 'notes', x: 0, y: 18, w: 2, h: 8, minW: 1, minH: 4 },
+  ]
 }
 
 // ── Vista principal PatientDetail ─────────────────────────
@@ -330,31 +322,49 @@ export default function PatientDetail() {
   const [patient, setPatient] = useState(null)
   const [entries, setEntries] = useState([])
   const [insights, setInsights] = useState(null)
-  const [expanded, setExpanded] = useState(null)
+  const [expandedEntry, setExpandedEntry] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  // Layout modular
+  const [layouts, setLayouts] = useState(() => {
+    const saved = localStorage.getItem(`psych_dashboard_layout_${id}`)
+    return saved ? JSON.parse(saved) : DEFAULT_LAYOUTS
+  })
+
+  const [visiblePanels, setVisiblePanels] = useState(() => {
+    const saved = localStorage.getItem(`psych_dashboard_visible_${id}`)
+    return saved ? JSON.parse(saved) : PANELS.map(p => p.i)
+  })
+
+  const [showMenu, setShowMenu] = useState(false)
+
+  const onLayoutChange = (layout, allLayouts) => {
+    setLayouts(allLayouts)
+    localStorage.setItem(`psych_dashboard_layout_${id}`, JSON.stringify(allLayouts))
+  }
+
+  const togglePanel = (panelId) => {
+    setVisiblePanels(prev => {
+      const next = prev.includes(panelId) ? prev.filter(p => p !== panelId) : [...prev, panelId]
+      localStorage.setItem(`psych_dashboard_visible_${id}`, JSON.stringify(next))
+      return next
+    })
+  }
 
   useEffect(() => {
     const load = async () => {
       try {
-        // Fetch paciente por ID directo para mayor robustez
         const [pRes, jRes, iRes] = await Promise.allSettled([
           api.get('/patients'),
           api.get(`/journal?patientId=${id}`),
           api.get(`/patients/${id}/insights`),
         ])
-
         if (pRes.status === 'fulfilled') {
           const p = pRes.value.data.patients.find((p) => p.id === id)
           setPatient(p || null)
         }
-        if (jRes.status === 'fulfilled') {
-          setEntries(jRes.value.data.entries || [])
-        }
-        if (iRes.status === 'fulfilled') {
-          setInsights(iRes.value.data)
-        } else {
-          console.warn('Insights no disponibles:', iRes.reason?.message)
-        }
+        if (jRes.status === 'fulfilled') setEntries(jRes.value.data.entries || [])
+        if (iRes.status === 'fulfilled') setInsights(iRes.value.data)
       } catch (err) {
         console.error('Error cargando PatientDetail:', err)
       } finally {
@@ -364,15 +374,49 @@ export default function PatientDetail() {
     load()
   }, [id])
 
-  let filtered = entries
-  if (loading) {
-    return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="card-psych h-24 bg-gray-100 dark:bg-gray-800" />)}</div>
-  }
-
+  if (loading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="card-psych h-24 bg-gray-100 dark:bg-gray-800" />)}</div>
   if (!patient) return <div className="text-center py-20 text-gray-400">Paciente no encontrado.</div>
 
+  const renderPanel = (panelId) => {
+    switch (panelId) {
+      case 'pre-session':
+        return <PreSessionCard insights={insights} />
+      case 'mood-chart':
+        return <MoodChart entries={entries} mode="psych" height="100%" defaultDays={14} />
+      case 'entries':
+        return (
+          <div className="space-y-2">
+            {entries.map((entry) => {
+              const config = MOOD_ICONS[entry.moodScore]
+              const open = expandedEntry === entry.id
+              return (
+                <div key={entry.id} className={`rounded-xl border transition-all cursor-pointer ${open ? 'border-indigo-200 bg-indigo-50/30' : 'border-gray-100 hover:border-gray-200 dark:border-gray-700'}`}>
+                  <div className="flex items-center gap-2 p-2" onClick={() => setExpandedEntry(open ? null : entry.id)}>
+                    <div className="w-8 h-8 rounded-lg flex flex-col items-center justify-center shrink-0" style={{ backgroundColor: config?.bg }}>
+                      <MoodIcon score={entry.moodScore} size={12} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5"><span className="text-[11px] font-bold" style={{ color: config?.color }}>{config?.label}</span></div>
+                      <p className="text-[10px] text-gray-400 truncate capitalize">{formatDate(entry.createdAt)}</p>
+                    </div>
+                    {open ? <ChevronUp size={12} className="text-gray-400" /> : <ChevronDown size={12} className="text-gray-400" />}
+                  </div>
+                  {open && <div className="px-2 pb-2 border-t border-gray-100 pt-2 animate-fade-in text-[11px] text-gray-700 whitespace-pre-wrap">{entry.content}</div>}
+                </div>
+              )
+            })}
+          </div>
+        )
+      case 'goals':
+        return <TherapyGoals patientId={id} />
+      case 'notes':
+        return <SessionNotes patientId={id} />
+      default: return null
+    }
+  }
+
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-5 animate-fade-in relative pb-10">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link to="/psych/patients" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
@@ -381,77 +425,58 @@ export default function PatientDetail() {
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">{patient.name}</h1>
-            {patient.hasAlert && <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full font-bold">⚠ Ánimo bajo</span>}
-            {patient.hasInactivityAlert && <span className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full font-bold flex items-center gap-1"><Wifi size={10} /> {patient.daysSinceLastEntry}d sin registrar</span>}
+            {patient.hasAlert && <span className="text-[10px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded font-bold">⚠ Ánimo bajo</span>}
+            {patient.hasInactivityAlert && <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded font-bold flex items-center gap-1"><Wifi size={10} /> {patient.daysSinceLastEntry}d sin registro</span>}
           </div>
           <p className="text-gray-400 text-xs">{patient.totalEntries} entradas totales</p>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-        {/* Columna principal */}
-        <div className="xl:col-span-2 space-y-5">
-          {/* Ficha pre-sesión */}
-          <PreSessionCard insights={insights} />
-
-          {/* Gráfico */}
-          <div className="card-psych dark:bg-gray-800">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp size={14} className="text-indigo-500" />
-              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Evolución del ánimo</span>
-            </div>
-            <MoodChart entries={entries} mode="psych" height={180} defaultDays={14} />
-          </div>
-
-          {/* Entradas con filtro */}
-          <div className="card-psych dark:bg-gray-800">
-
-            <p className="text-xs text-gray-400 mb-3">{filtered.length} entradas</p>
-
-            <div className="space-y-2 max-h-96 overflow-y-auto no-scrollbar">
-              {filtered.map((entry) => {
-                const config = MOOD_ICONS[entry.moodScore]
-                const open = expanded === entry.id
+        {/* Dropdown de Paneles */}
+        <div className="relative">
+          <button onClick={() => setShowMenu(!showMenu)} className="btn-ghost flex items-center gap-2 text-sm py-2 px-3">
+            <Layout size={16} /> Paneles
+          </button>
+          {showMenu && (
+            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 p-2 animate-scale-in">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2 mb-2">Visibilidad</p>
+              {PANELS.map(panel => {
+                const isVisible = visiblePanels.includes(panel.i)
                 return (
-                  <div key={entry.id} className={`rounded-xl border transition-all cursor-pointer ${open ? 'border-indigo-200 dark:border-indigo-800 bg-indigo-50/30 dark:bg-indigo-900/10' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200'}`}>
-                    <div className="flex items-center gap-3 p-3" onClick={() => setExpanded(open ? null : entry.id)}>
-                      <div className="w-10 h-10 rounded-xl flex flex-col items-center justify-center shrink-0" style={{ backgroundColor: config?.bg }}>
-                        <MoodIcon score={entry.moodScore} size={14} />
-                        <span className="text-[9px] font-bold" style={{ color: config?.color }}>{entry.moodScore}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold" style={{ color: config?.color }}>{config?.label}</span>
-                        </div>
-                        <p className="text-xs text-gray-400 truncate capitalize">{formatDate(entry.createdAt)}</p>
-                        {!open && <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{entry.content}</p>}
-                      </div>
-                      {open ? <ChevronUp size={13} className="text-gray-400 shrink-0" /> : <ChevronDown size={13} className="text-gray-400 shrink-0" />}
+                  <button key={panel.i} onClick={() => togglePanel(panel.i)} className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-colors ${isVisible ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 font-semibold' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                    <div className="flex items-center gap-2">
+                      <panel.icon size={14} /> {panel.label}
                     </div>
-                    {open && (
-                      <div className="px-3 pb-3 border-t border-gray-100 dark:border-gray-700 pt-2 animate-fade-in">
-                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{entry.content}</p>
-                      </div>
-                    )}
-                  </div>
+                    {isVisible ? <Eye size={14} /> : <EyeOff size={14} className="text-gray-400" />}
+                  </button>
                 )
               })}
             </div>
-          </div>
+          )}
         </div>
+      </div>
 
-        {/* Columna lateral */}
-        <div className="space-y-5">
-          {/* Objetivos */}
-          <div className="card-psych dark:bg-gray-800">
-            <TherapyGoals patientId={id} />
-          </div>
-
-          {/* Notas de sesión */}
-          <div className="card-psych dark:bg-gray-800">
-            <SessionNotes patientId={id} />
-          </div>
-        </div>
+      {/* Modular Grid */}
+      <div className="-mx-2">
+        <ResponsiveGridLayout
+          className="layout"
+          layouts={layouts}
+          breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
+          cols={{ lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 }}
+          rowHeight={60}
+          onLayoutChange={onLayoutChange}
+          draggableHandle=".draggable-handle"
+          margin={[16, 16]}
+          isBounded={false}
+          useCSSTransforms={true}
+        >
+          {PANELS.filter(p => visiblePanels.includes(p.i)).map(panel => (
+            <div key={panel.i}>
+              <PanelWrapper title={panel.label} icon={panel.icon} onHide={() => togglePanel(panel.i)}>
+                {renderPanel(panel.i)}
+              </PanelWrapper>
+            </div>
+          ))}
+        </ResponsiveGridLayout>
       </div>
     </div>
   )

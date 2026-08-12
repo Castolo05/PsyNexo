@@ -28,7 +28,7 @@ export default function PsychLayout() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-gray-950 flex transition-colors duration-300">
       {/* Sidebar — solo desktop */}
-      <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex-col py-6 px-4 shrink-0 hidden lg:flex transition-colors duration-300">
+      <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex-col py-6 px-4 shrink-0 hidden lg:flex transition-colors duration-300 sticky top-0 h-screen overflow-y-auto">
         {/* Logo */}
         <div className="flex items-center gap-2 px-2 mb-8">
           <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center">
