@@ -18,7 +18,7 @@ const ICON_MAP = {
  *   showLabel?: boolean
  *   showScore?: boolean
  */
-export default function MoodIcon({ score, size = 20, className = '', showLabel = false, showScore = false }) {
+export default function MoodIcon({ score, size = 20, className = '', showLabel = false, showScore = false, color }) {
   const config = MOOD_ICONS[score]
   if (!config) return null
 
@@ -30,14 +30,14 @@ export default function MoodIcon({ score, size = 20, className = '', showLabel =
       <span
         className="inline-flex items-center justify-center rounded-full shrink-0"
         style={{
-          color: config.color,
+          color: color || config.color,
           padding: size > 24 ? '6px' : '4px',
         }}
       >
         <IconComponent size={size} strokeWidth={2} />
       </span>
       {showScore && (
-        <span className="font-bold tabular-nums" style={{ color: config.color }}>
+        <span className="font-bold tabular-nums" style={{ color: color || config.color }}>
           {score}
         </span>
       )}

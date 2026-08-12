@@ -250,10 +250,10 @@ export default function HistoryPage() {
                     <div className="flex items-center gap-3" onClick={() => setExpanded(open ? null : entry.id)}>
                       <div
                         className="w-14 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-sm"
-                        style={{ backgroundColor: config?.bg, border: `1px solid ${config?.color}40` }}
+                        style={{ backgroundColor: config?.color, border: `1px solid ${config?.color}40` }}
                       >
-                        <MoodIcon score={entry.moodScore} size={22} />
-                        <span className="text-xs font-bold mt-0.5" style={{ color: config?.color }}>{entry.moodScore}/10</span>
+                        <MoodIcon score={entry.moodScore} size={22} color="white" />
+                        <span className="text-xs font-bold mt-0.5" style={{ color: 'white' }}>{entry.moodScore}/10</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-bold mb-0.5 flex flex-wrap items-center gap-1.5">

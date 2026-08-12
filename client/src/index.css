@@ -26,6 +26,7 @@ body {
 .dark body {
   background-color: #0d0f18;
   color: #e8eaf0;
+  --track-bg: #374151;
 }
 
 /* ── Scrollbar ───────────────────────────────────────────── */
@@ -156,6 +157,9 @@ body {
   cursor: grab;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
+.dark .mood-slider::-webkit-slider-thumb {
+  background: #1f2937;
+}
 .mood-slider::-webkit-slider-thumb:hover {
   transform: scale(1.2);
   box-shadow: 0 3px 12px rgba(0,0,0,0.2);
@@ -171,6 +175,9 @@ body {
   background: white;
   border: 3px solid #8FBC8F;
   cursor: grab;
+}
+.dark .mood-slider::-moz-range-thumb {
+  background: #1f2937;
 }
 
 /* ── Recharts ────────────────────────────────────────────── */

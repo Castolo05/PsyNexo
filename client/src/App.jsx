@@ -12,6 +12,7 @@ import PatientDashboard from './pages/patient/PatientDashboard'
 import NewEntryPage from './pages/patient/NewEntryPage'
 import HistoryPage from './pages/patient/HistoryPage'
 import PatientProfile from './pages/patient/PatientProfile'
+import EditProfilePage from './pages/patient/EditProfilePage'
 import EmergencyPage from './pages/patient/EmergencyPage'
 import BreathingPage from './pages/patient/BreathingPage'
 
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="new" element={<NewEntryPage />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="profile" element={<PatientProfile />} />
+            <Route path="profile/edit" element={<EditProfilePage />} />
             <Route path="emergency" element={<EmergencyPage />} />
             <Route path="breathing" element={<BreathingPage />} />
           </Route>

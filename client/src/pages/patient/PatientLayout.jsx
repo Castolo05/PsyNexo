@@ -18,6 +18,10 @@ export default function PatientLayout() {
     localStorage.setItem('nexo_dark', darkMode)
   }, [darkMode])
 
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [location.pathname])
+
   const handleLogout = () => { logout(); navigate('/login') }
 
   const navItems = [

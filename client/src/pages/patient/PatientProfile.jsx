@@ -35,15 +35,6 @@ export default function PatientProfile() {
   const [linkMsg, setLinkMsg] = useState('')
   const [linkError, setLinkError] = useState('')
 
-  // Edición de perfil
-  const [isEditingProfile, setIsEditingProfile] = useState(false)
-  const [editName, setEditName] = useState('')
-  const [editEmail, setEditEmail] = useState('')
-  const [editPassword, setEditPassword] = useState('')
-  const [editAvatar, setEditAvatar] = useState('')
-  const [profileSaving, setProfileSaving] = useState(false)
-  const fileInputRef = useRef(null)
-
   // Hábitos
   const [habits, setHabits] = useState([])
   const [newText, setNewText] = useState('')
@@ -74,40 +65,8 @@ export default function PatientProfile() {
     }
   }
 
-  // Guardar perfil
-  const handleSaveProfile = async () => {
-    setProfileSaving(true)
-    try {
-      const { data } = await api.put('/auth/user', {
-        name: editName,
-        email: editEmail,
-        password: editPassword || undefined,
-        avatar: editAvatar
-      })
-      updateUser(data.user)
-      setIsEditingProfile(false)
-      setEditPassword('')
-    } catch (err) {
-      alert(err.response?.data?.error || 'Error al guardar perfil')
-    } finally {
-      setProfileSaving(false)
-    }
-  }
-
   const openProfileEditor = () => {
-    setEditName(user?.name || '')
-    setEditEmail(user?.email || '')
-    setEditAvatar(user?.avatar || '')
-    setIsEditingProfile(true)
-  }
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => setEditAvatar(reader.result)
-      reader.readAsDataURL(file)
-    }
+    navigate('/patient/profile/edit')
   }
 
   const handleAddHabit = async () => {
@@ -172,87 +131,19 @@ export default function PatientProfile() {
       </div>
 
       {/* Info del usuario o Edición */}
-      {isEditingProfile ? (
-        <div className="card space-y-4">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="font-bold text-gray-800 dark:text-white text-lg">Editar Perfil</h2>
-            <button onClick={() => setIsEditingProfile(false)} className="text-gray-400 hover:text-gray-600">
-              <X size={20} />
-            </button>
-          </div>
-          
-          {/* Selector de Avatar */}
-          <div className="space-y-3">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Foto de Perfil</label>
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-20 h-20 bg-sage-50 dark:bg-sage-900/30 rounded-full flex items-center justify-center overflow-hidden border-2 border-sage-200 dark:border-sage-800">
-                <AvatarDisplay avatar={editAvatar} size={36} className="text-sage-500" />
-              </div>
-              <div className="flex gap-2">
-                <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
-                <button onClick={() => fileInputRef.current?.click()} className="btn-ghost text-xs py-1.5 px-3 flex items-center gap-1">
-                  <Camera size={14} /> Subir foto
-                </button>
-                <button onClick={() => setEditAvatar('')} className="btn-ghost text-xs py-1.5 px-3 text-red-500 hover:text-red-600">
-                  Eliminar
-                </button>
-              </div>
-            </div>
-            
-            <p className="text-xs text-center text-gray-400 mt-2">O elige un animalito:</p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {Object.keys(ANIMAL_ICONS).map(name => {
-                const AnimalIcon = ANIMAL_ICONS[name]
-                const isActive = editAvatar === `icon:${name}`
-                return (
-                  <button
-                    key={name}
-                    onClick={() => setEditAvatar(`icon:${name}`)}
-                    className={`p-2.5 rounded-xl transition-all ${
-                      isActive ? 'bg-sage-400 text-white shadow-md scale-110' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200'
-                    }`}
-                  >
-                    <AnimalIcon size={20} />
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="space-y-3 pt-3 border-t border-peach-100 dark:border-gray-700">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre</label>
-              <input className="input" value={editName} onChange={e => setEditName(e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
-              <input className="input" type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nueva Contraseña (opcional)</label>
-              <input className="input" type="password" placeholder="Dejar en blanco para no cambiar" value={editPassword} onChange={e => setEditPassword(e.target.value)} />
-            </div>
-          </div>
-
-          <button onClick={handleSaveProfile} disabled={profileSaving || !editName || !editEmail} className="btn-patient w-full mt-4">
-            {profileSaving ? 'Guardando...' : 'Guardar Cambios'}
-          </button>
+      <div 
+        onClick={openProfileEditor}
+        className="card flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-sage-300 dark:hover:border-sage-700 transition-all group"
+      >
+        <div className="w-16 h-16 bg-sage-100 dark:bg-sage-900/30 rounded-full flex items-center justify-center overflow-hidden border border-sage-200 dark:border-sage-800">
+          <AvatarDisplay avatar={user?.avatar} size={32} className="text-sage-500" />
         </div>
-      ) : (
-        <div 
-          onClick={openProfileEditor}
-          className="card flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-sage-300 dark:hover:border-sage-700 transition-all group"
-        >
-          <div className="w-16 h-16 bg-sage-100 dark:bg-sage-900/30 rounded-full flex items-center justify-center overflow-hidden border border-sage-200 dark:border-sage-800">
-            <AvatarDisplay avatar={user?.avatar} size={32} className="text-sage-500" />
-          </div>
-          <div className="flex-1">
-            <div className="font-bold text-gray-800 dark:text-white text-lg group-hover:text-sage-600 transition-colors">{user?.name}</div>
-            <div className="text-sm text-gray-400">{user?.email}</div>
-            <div className="text-xs text-sage-500 font-semibold mt-0.5">Toca para editar perfil</div>
-          </div>
+        <div className="flex-1">
+          <div className="font-bold text-gray-800 dark:text-white text-lg group-hover:text-sage-600 transition-colors">{user?.name}</div>
+          <div className="text-sm text-gray-400">{user?.email}</div>
+          <div className="text-xs text-sage-500 font-semibold mt-0.5">Toca para editar perfil</div>
         </div>
-      )}
+      </div>
 
       {/* Gestión de hábitos */}
       <div className="card space-y-3">

@@ -140,11 +140,11 @@ export default function MoodCalendar({ entries = [], onDayClick, selectedDate, m
                 }
                 ${today_ && !selected && !hasEntries ? todayClass : ''}
               `}
-              style={hasEntries ? { backgroundColor: moodConfig?.bg, borderColor: selected ? moodConfig?.color : 'transparent' } : {}}
+              style={hasEntries ? { backgroundColor: moodConfig?.color, borderColor: selected ? moodConfig?.color : 'transparent' } : {}}
             >
               <span className={`text-sm font-bold z-10 relative ${
-                hasEntries ? '' : selected ? 'text-white' : today_ ? 'text-sage-600 dark:text-sage-400' : 'text-gray-700 dark:text-gray-300'
-              }`} style={hasEntries ? { color: moodConfig?.color } : {}}>
+                hasEntries ? 'text-white' : selected ? 'text-white' : today_ ? 'text-sage-600 dark:text-sage-400' : 'text-gray-700 dark:text-gray-300'
+              }`}>
                 {day}
               </span>
 

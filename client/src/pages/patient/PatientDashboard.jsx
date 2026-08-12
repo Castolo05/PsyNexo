@@ -59,7 +59,7 @@ function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], ha
           onChange={(e) => setMood(Number(e.target.value))}
           className="mood-slider w-full h-3 rounded-full appearance-none cursor-grab active:cursor-grabbing"
           style={{
-            background: `linear-gradient(to right, ${moodConfig.color} 0%, ${moodConfig.color} ${sliderPercent}%, #e5e7eb ${sliderPercent}%, #e5e7eb 100%)`,
+            background: `linear-gradient(to right, ${moodConfig.color} 0%, ${moodConfig.color} ${sliderPercent}%, var(--track-bg, #e5e7eb) ${sliderPercent}%, var(--track-bg, #e5e7eb) 100%)`,
           }}
         />
         <div className="flex justify-between mt-2 px-0.5">
@@ -77,28 +77,28 @@ function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], ha
 
       {/* Texto libre */}
       <div className="card">
-        <div className="flex items-center justify-between mb-2">
-          <label className="label mb-0">¿Qué pasó hoy?</label>
-          <button
-            type="button"
-            onClick={() => setPreferInSession(!preferInSession)}
-            className={`text-xs px-2 py-1 rounded-lg font-semibold transition-all ${
-              preferInSession
-                ? 'bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-300'
-                : 'text-gray-400 hover:text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20'
-            }`}
-          >
-            {preferInSession ? '✓ Prefiero contarlo en la sesión' : 'Prefiero contarlo en la sesión'}
-          </button>
-        </div>
+        <label className="label mb-2">¿Qué pasó hoy?</label>
         <textarea
-          className="input resize-none h-28"
+          className="input resize-none h-28 mb-3"
           placeholder={preferInSession ? '(Opcional) Puedes dejar esto vacío...' : 'Contá cómo te sentiste, qué te pasó...'}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           maxLength={5000}
         />
-        <p className="text-right text-xs text-gray-400 mt-1">{content.length}/5000</p>
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setPreferInSession(!preferInSession)}
+            className={`text-sm px-4 py-2.5 rounded-xl font-semibold transition-all border ${
+              preferInSession
+                ? 'bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-300 border-sage-200 dark:border-sage-800'
+                : 'btn-ghost'
+            }`}
+          >
+            {preferInSession ? '✓ Prefiero contarlo en la sesión' : 'Prefiero contarlo en la sesión'}
+          </button>
+          <p className="text-right text-xs text-gray-400">{content.length}/5000</p>
+        </div>
       </div>
 
       {/* Hábitos del día */}
@@ -318,11 +318,11 @@ export default function PatientDashboard() {
             {/* Header de la nota */}
             <div className="flex items-center gap-3 mb-3">
               <div
-                className="w-12 h-12 rounded-2xl flex flex-col items-center justify-center shrink-0"
-                style={{ backgroundColor: todayMoodConfig?.bg }}
+                className="w-12 h-12 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-sm"
+                style={{ backgroundColor: todayMoodConfig?.color }}
               >
-                <MoodIcon score={todayEntry.moodScore} size={18} />
-                <span className="text-[10px] font-bold" style={{ color: todayMoodConfig?.color }}>
+                <MoodIcon score={todayEntry.moodScore} size={18} color="white" />
+                <span className="text-[10px] font-bold" style={{ color: 'white' }}>
                   {todayEntry.moodScore}
                 </span>
               </div>
