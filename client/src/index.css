@@ -3,6 +3,16 @@
 @import "react-grid-layout/css/styles.css";
 @import "react-resizable/css/styles.css";
 
+.react-resizable-handle {
+  z-index: 50 !important;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: theme('colors.indigo.500') !important;
+  opacity: 0.2 !important;
+  border-radius: 1rem;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

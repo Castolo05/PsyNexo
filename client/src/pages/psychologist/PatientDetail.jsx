@@ -16,8 +16,8 @@ const ResponsiveGridLayout = WidthProvider(Responsive)
 // ── Wrapper para paneles modulares ────────────────────────
 function PanelWrapper({ title, icon: Icon, onHide, children, className = '' }) {
   return (
-    <div className={`card-psych dark:bg-gray-800 h-full flex flex-col p-0 overflow-hidden ${className}`}>
-      <div className="draggable-handle cursor-move flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+    <div className={`card-psych dark:bg-gray-800 h-full flex flex-col p-0 ${className}`}>
+      <div className="draggable-handle cursor-move flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-t-2xl">
         <div className="flex items-center gap-2">
           {Icon && <Icon size={16} className="text-indigo-500" />}
           <span className="text-sm font-bold text-gray-700 dark:text-gray-200">{title}</span>
@@ -26,7 +26,7 @@ function PanelWrapper({ title, icon: Icon, onHide, children, className = '' }) {
           <EyeOff size={14} />
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto no-scrollbar p-4">
+      <div className="flex-1 overflow-y-auto no-scrollbar p-3 relative min-h-0 flex flex-col">
         {children}
       </div>
     </div>
