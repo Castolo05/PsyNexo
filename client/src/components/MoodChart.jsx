@@ -92,7 +92,7 @@ export default function MoodChart({ entries = [], days = 14, onDaysChange, mode 
   }, [entries, currentDays])
 
   return (
-    <div>
+    <div className="flex flex-col h-full w-full">
       {/* Selector de período */}
       {showSelector && (
         <div className="flex gap-1 mb-3">
@@ -116,14 +116,12 @@ export default function MoodChart({ entries = [], days = 14, onDaysChange, mode 
 
       {/* Gráfico o estado vacío */}
       {chartData.length < 2 ? (
-        <div
-          className="flex items-center justify-center text-gray-400 text-xs rounded-2xl bg-gray-50 dark:bg-gray-800/50"
-          style={{ height }}
-        >
+        <div className="flex-1 flex items-center justify-center text-gray-400 text-xs rounded-2xl bg-gray-50 dark:bg-gray-800/50">
           No hay suficientes datos para el período seleccionado.
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={height}>
+        <div className="flex-1 min-h-0 w-full relative">
+          <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 8, right: 4, bottom: 0, left: -24 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
             <XAxis
@@ -152,6 +150,7 @@ export default function MoodChart({ entries = [], days = 14, onDaysChange, mode 
             />
           </LineChart>
         </ResponsiveContainer>
+        </div>
       )}
     </div>
   )

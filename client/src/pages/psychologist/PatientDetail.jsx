@@ -468,6 +468,7 @@ export default function PatientDetail() {
           margin={[16, 16]}
           isBounded={false}
           useCSSTransforms={true}
+          resizeHandles={['se', 'sw', 'ne', 'nw']}
         >
           {PANELS.filter(p => visiblePanels.includes(p.i)).map(panel => (
             <div key={panel.i}>
