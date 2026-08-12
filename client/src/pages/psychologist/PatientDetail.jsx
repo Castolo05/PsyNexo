@@ -301,7 +301,7 @@ const PANELS = [
 
 const PANEL_CONSTRAINTS = {
   'pre-session': { minW: 1, minH: 3 },
-  'mood-chart': { minW: 1, minH: 5 },
+  'mood-chart': { minW: 1, minH: 4 },
   'entries': { minW: 1, minH: 4 },
   'goals': { minW: 1, minH: 4 },
   'notes': { minW: 1, minH: 4 },
