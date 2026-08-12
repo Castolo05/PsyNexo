@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import api from '../../lib/api'
-import { MOOD_ICONS, AVAILABLE_TAGS, formatDate, formatDateShort } from '../../lib/constants'
+import { MOOD_ICONS, formatDate, formatDateShort } from '../../lib/constants'
 import MoodIcon from '../../components/MoodIcon'
 import MoodChart from '../../components/MoodChart'
 import {
   ArrowLeft, TrendingUp, TrendingDown, Minus, Plus,
-  Bookmark, Tag, AlertTriangle, Wifi, Target,
+  Bookmark, AlertTriangle, Wifi, Target,
   CheckCircle2, Circle, Trash2, ChevronDown, ChevronUp,
   Save, X, Filter, Calendar,
 } from 'lucide-react'
@@ -14,7 +14,7 @@ import {
 // ── Ficha pre-sesión ──────────────────────────────────────
 function PreSessionCard({ insights }) {
   if (!insights) return null
-  const { avgThisWeek, avgLastWeek, trend, topTags, entriesThisWeek } = insights
+  const { avgThisWeek, avgLastWeek, trend, entriesThisWeek } = insights
 
   const trendNum = trend ? parseFloat(trend) : 0
   const TrendIcon = trendNum > 0 ? TrendingUp : trendNum < 0 ? TrendingDown : Minus
@@ -55,19 +55,7 @@ function PreSessionCard({ insights }) {
         </div>
       </div>
 
-      {/* Tags recurrentes */}
-      {topTags?.length > 0 && (
-        <div className="mb-3">
-          <p className="text-xs text-gray-400 font-semibold mb-1.5 flex items-center gap-1"><Tag size={11} />Temas recurrentes (14 días)</p>
-          <div className="flex flex-wrap gap-1.5">
-            {topTags.map(({ tag, count }) => (
-              <span key={tag} className="text-xs bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-700 font-medium">
-                {tag} <span className="opacity-60">({count}x)</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+
 
     </div>
   )
@@ -342,7 +330,6 @@ export default function PatientDetail() {
   const [patient, setPatient] = useState(null)
   const [entries, setEntries] = useState([])
   const [insights, setInsights] = useState(null)
-  const [filterTag, setFilterTag] = useState('')
   const [expanded, setExpanded] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -378,8 +365,6 @@ export default function PatientDetail() {
   }, [id])
 
   let filtered = entries
-  if (filterTag) filtered = filtered.filter((e) => e.tags?.includes(filterTag))
-
   if (loading) {
     return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="card-psych h-24 bg-gray-100 dark:bg-gray-800" />)}</div>
   }
@@ -420,18 +405,7 @@ export default function PatientDetail() {
 
           {/* Entradas con filtro */}
           <div className="card-psych dark:bg-gray-800">
-            <div className="flex items-center gap-2 mb-3">
-              <Filter size={14} className="text-gray-400" />
-              <select
-                className="input-psych text-sm flex-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                value={filterTag}
-                onChange={(e) => setFilterTag(e.target.value)}
-              >
-                <option value="">Todas las etiquetas</option>
-                {AVAILABLE_TAGS.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-              {filterTag && <button onClick={() => setFilterTag('')} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 underline">Limpiar</button>}
-            </div>
+
             <p className="text-xs text-gray-400 mb-3">{filtered.length} entradas</p>
 
             <div className="space-y-2 max-h-96 overflow-y-auto no-scrollbar">
@@ -452,15 +426,11 @@ export default function PatientDetail() {
                         <p className="text-xs text-gray-400 truncate capitalize">{formatDate(entry.createdAt)}</p>
                         {!open && <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{entry.content}</p>}
                       </div>
-                      <div className="flex flex-wrap gap-1 max-w-[100px] justify-end shrink-0">
-                        {entry.tags?.slice(0, 2).map((t) => <span key={t} className="text-[9px] bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 px-1.5 py-0.5 rounded-full">{t}</span>)}
-                      </div>
                       {open ? <ChevronUp size={13} className="text-gray-400 shrink-0" /> : <ChevronDown size={13} className="text-gray-400 shrink-0" />}
                     </div>
                     {open && (
                       <div className="px-3 pb-3 border-t border-gray-100 dark:border-gray-700 pt-2 animate-fade-in">
                         <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{entry.content}</p>
-                        {entry.tags?.length > 0 && <div className="flex flex-wrap gap-1 mt-2">{entry.tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>}
                       </div>
                     )}
                   </div>

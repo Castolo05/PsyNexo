@@ -147,7 +147,7 @@ export default function MoodChart({ entries = [], days = 14, onDaysChange, mode 
               dataKey="mood"
               stroke={lineColor}
               strokeWidth={2.5}
-              dot={<CustomDot />}
+              dot={chartData.length <= 15 ? <CustomDot /> : false}
               activeDot={{ r: 7, fill: lineColor }}
             />
           </LineChart>

@@ -25,12 +25,6 @@ export const MOOD_CHART_COLOR = (score) => {
   return '#7c3aed'
 }
 
-export const AVAILABLE_TAGS = [
-  'Ansiedad', 'Discusión', 'Insomnio', 'Logro',
-  'Medicación', 'Ejercicio', 'Tristeza', 'Gratitud',
-  'Trabajo', 'Familia', 'Pareja', 'Soledad',
-]
-
 export const MOOD_SCORES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 // Helpers de fecha

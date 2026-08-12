@@ -92,9 +92,10 @@ function HabitCorrelationCard({ data }) {
           )
         })}
       </div>
-      <p className="text-xs text-gray-400 mt-3 text-center">
-        * Se muestran hábitos con al menos 3 días de cumplimiento registrado.
-      </p>
+      <div className="text-xs text-gray-400 mt-3 text-center space-y-1">
+        <p>* Se muestran hábitos con al menos 3 días de cumplimiento registrado.</p>
+        <p>** Aclaración: Los datos mostrados arriba no necesariamente demuestran un patrón de comportamiento o causalidad clínica.</p>
+      </div>
     </div>
   )
 }

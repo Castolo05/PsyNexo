@@ -97,7 +97,6 @@ function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], ha
           value={content}
           onChange={(e) => setContent(e.target.value)}
           maxLength={5000}
-          autoFocus
         />
         <p className="text-right text-xs text-gray-400 mt-1">{content.length}/5000</p>
       </div>
