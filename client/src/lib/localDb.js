@@ -399,6 +399,25 @@ export function authLink(patientId, inviteCode) {
   return { user: safe, message: `¡Vinculado con ${psych.name}!` }
 }
 
+export function userUpdate(userId, newData) {
+  const users = read(KEYS.users)
+  const idx = users.findIndex(u => u.id === userId)
+  if (idx === -1) throw new Error('Usuario no encontrado.')
+  
+  if (newData.name) users[idx].name = newData.name
+  if (newData.email) {
+    if (users.find(u => u.email.toLowerCase() === newData.email.toLowerCase() && u.id !== userId)) {
+      throw new Error('Ese email ya está en uso.')
+    }
+    users[idx].email = newData.email
+  }
+  if (newData.password) users[idx].password = newData.password
+  if (newData.avatar !== undefined) users[idx].avatar = newData.avatar
+  
+  write(KEYS.users, users)
+  const { password: _, ...safe } = users[idx]
+  return safe
+}
 // ── JOURNAL ───────────────────────────────────────────────
 export function journalList(userId, role, patientId) {
   const all = read(KEYS.journal)

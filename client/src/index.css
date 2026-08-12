@@ -18,8 +18,8 @@ body {
   font-family: 'Nunito', 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Modo claro: fondo slate levemente azulado para distinguir cards */
-  background-color: #EFF2F7;
+  /* Modo claro: fondo pastel tierno */
+  background-color: #FFF9F5;
   color: #1a1f2e;
 }
 
@@ -39,7 +39,7 @@ body {
 
   /* ── Botones ── */
   .btn-patient {
-    @apply bg-sage-400 hover:bg-sage-500 text-white font-bold py-3 px-6 rounded-2xl
+    @apply bg-sage-400 hover:bg-sage-500 text-white font-bold py-3.5 px-6 rounded-[24px]
            transition-all duration-200 shadow-sm hover:shadow-md active:scale-95
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
@@ -57,16 +57,16 @@ body {
            py-2.5 px-5 rounded-xl transition-all duration-200;
   }
 
-  /* ── Cards — con borde visible en modo claro ── */
+  /* ── Cards — más redondeadas y tiernas ── */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-2xl p-5
-           border border-gray-200 dark:border-gray-700
+    @apply bg-white dark:bg-gray-800 rounded-[28px] p-6
+           border border-peach-100 dark:border-gray-700
            shadow-sm;
   }
 
   .card-pastel {
-    @apply bg-gradient-to-br from-lavender-100 to-peach-50 dark:from-gray-800 dark:to-gray-800
-           rounded-2xl border border-lavender-200 dark:border-gray-700 p-5 shadow-sm;
+    @apply bg-gradient-to-br from-lavender-50 to-peach-50 dark:from-gray-800 dark:to-gray-800
+           rounded-[28px] border border-lavender-100 dark:border-gray-700 p-6 shadow-sm;
   }
 
   .card-psych {
@@ -77,13 +77,13 @@ body {
 
   /* ── Inputs — borde más oscuro en modo claro ── */
   .input {
-    @apply w-full px-4 py-3 rounded-xl
-           border border-gray-300 dark:border-gray-600
+    @apply w-full px-4 py-3.5 rounded-[20px]
+           border border-peach-200 dark:border-gray-600
            bg-white dark:bg-gray-700
            text-gray-900 dark:text-gray-100
            placeholder-gray-400 dark:placeholder-gray-500
            focus:outline-none focus:ring-2 focus:ring-sage-400 dark:focus:ring-sage-500
-           transition-all duration-200 text-base;
+           transition-all duration-200 text-base shadow-sm;
   }
 
   .input-psych {

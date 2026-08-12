@@ -10,7 +10,7 @@ import {
   sessionNotesList, sessionNoteCreate, sessionNoteUpdate, sessionNoteDelete,
   goalsList, goalCreate, goalToggle, goalDelete,
   habitsList, habitCreate, habitUpdate, habitDelete, habitCorrelation,
-  initDb,
+  initDb, userUpdate,
 } from './localDb'
 
 initDb()
@@ -106,6 +106,14 @@ const api = {
 
   put: async (url, body) => {
     const user = currentUser()
+
+    if (url === '/auth/user') {
+      if (!user) return fail('No autorizado', 401)
+      return run(() => {
+        const updatedUser = userUpdate(user.id, body)
+        return { user: updatedUser }
+      })
+    }
 
     if (url.startsWith('/habits/')) {
       const habitId = url.split('/habits/')[1]

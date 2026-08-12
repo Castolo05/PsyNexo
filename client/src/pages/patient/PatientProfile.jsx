@@ -1,9 +1,31 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../lib/api'
-import { UserRound, Link2, LogOut, Plus, Pencil, Trash2, Check, X, CheckCircle2 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import {
+  UserRound, Link2, LogOut, Plus, Pencil, Trash2, Check, X, CheckCircle2,
+  Phone, Camera, Cat, Dog, Rabbit, Bird, Snail, Turtle, Fish, Rat
+} from 'lucide-react'
+import { useNavigate, Link } from 'react-router-dom'
 import { HABIT_ICONS } from '../../lib/constants'
+
+// Mapeo de animalitos para el avatar
+const ANIMAL_ICONS = {
+  Cat, Dog, Rabbit, Bird, Snail, Turtle, Fish, Rat
+}
+
+// Componente para renderizar el avatar
+export function AvatarDisplay({ avatar, size = 28, className = "" }) {
+  if (!avatar) return <UserRound size={size} className={className} />
+  if (avatar.startsWith('data:image')) {
+    return <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+  }
+  if (avatar.startsWith('icon:')) {
+    const iconName = avatar.split(':')[1]
+    const IconComp = ANIMAL_ICONS[iconName] || UserRound
+    return <IconComp size={size} className={className} />
+  }
+  return <UserRound size={size} className={className} />
+}
 
 export default function PatientProfile() {
   const { user, logout, updateUser } = useAuth()
@@ -12,6 +34,15 @@ export default function PatientProfile() {
   const [linkLoading, setLinkLoading] = useState(false)
   const [linkMsg, setLinkMsg] = useState('')
   const [linkError, setLinkError] = useState('')
+
+  // Edición de perfil
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editPassword, setEditPassword] = useState('')
+  const [editAvatar, setEditAvatar] = useState('')
+  const [profileSaving, setProfileSaving] = useState(false)
+  const fileInputRef = useRef(null)
 
   // Hábitos
   const [habits, setHabits] = useState([])
@@ -43,6 +74,42 @@ export default function PatientProfile() {
     }
   }
 
+  // Guardar perfil
+  const handleSaveProfile = async () => {
+    setProfileSaving(true)
+    try {
+      const { data } = await api.put('/auth/user', {
+        name: editName,
+        email: editEmail,
+        password: editPassword || undefined,
+        avatar: editAvatar
+      })
+      updateUser(data.user)
+      setIsEditingProfile(false)
+      setEditPassword('')
+    } catch (err) {
+      alert(err.response?.data?.error || 'Error al guardar perfil')
+    } finally {
+      setProfileSaving(false)
+    }
+  }
+
+  const openProfileEditor = () => {
+    setEditName(user?.name || '')
+    setEditEmail(user?.email || '')
+    setEditAvatar(user?.avatar || '')
+    setIsEditingProfile(true)
+  }
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => setEditAvatar(reader.result)
+      reader.readAsDataURL(file)
+    }
+  }
+
   const handleAddHabit = async () => {
     if (!newText.trim()) return
     try {
@@ -54,7 +121,7 @@ export default function PatientProfile() {
     } catch { alert('Error al crear hábito.') }
   }
 
-  const handleSaveEdit = async (id) => {
+  const handleSaveEditHabit = async (id) => {
     try {
       const { data } = await api.put(`/habits/${id}`, { text: editText, icon: editIcon })
       setHabits(prev => prev.map(h => h.id === id ? data.habit : h))
@@ -62,7 +129,7 @@ export default function PatientProfile() {
     } catch { alert('Error al guardar.') }
   }
 
-  const handleDelete = async (id) => {
+  const handleDeleteHabit = async (id) => {
     if (!confirm('¿Eliminar este hábito? Se quitará de las notas existentes.')) return
     try {
       await api.delete(`/habits/${id}`)
@@ -93,19 +160,99 @@ export default function PatientProfile() {
 
   return (
     <div className="space-y-5 animate-fade-in">
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Mi Perfil</h1>
-
-      {/* Info del usuario */}
-      <div className="card flex items-center gap-4">
-        <div className="w-14 h-14 bg-sage-100 dark:bg-sage-900/30 rounded-2xl flex items-center justify-center">
-          <UserRound size={28} className="text-sage-500" />
-        </div>
-        <div>
-          <div className="font-bold text-gray-800 dark:text-white text-lg">{user?.name}</div>
-          <div className="text-sm text-gray-400">{user?.email}</div>
-          <div className="text-xs text-sage-500 font-semibold mt-0.5">Paciente</div>
-        </div>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Mi Perfil</h1>
+        <Link
+          to="/patient/emergency"
+          className="flex items-center gap-2 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 font-bold px-4 py-2 rounded-2xl transition-all shadow-sm"
+        >
+          <Phone size={16} />
+          SOS
+        </Link>
       </div>
+
+      {/* Info del usuario o Edición */}
+      {isEditingProfile ? (
+        <div className="card space-y-4">
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="font-bold text-gray-800 dark:text-white text-lg">Editar Perfil</h2>
+            <button onClick={() => setIsEditingProfile(false)} className="text-gray-400 hover:text-gray-600">
+              <X size={20} />
+            </button>
+          </div>
+          
+          {/* Selector de Avatar */}
+          <div className="space-y-3">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Foto de Perfil</label>
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-20 h-20 bg-sage-50 dark:bg-sage-900/30 rounded-full flex items-center justify-center overflow-hidden border-2 border-sage-200 dark:border-sage-800">
+                <AvatarDisplay avatar={editAvatar} size={36} className="text-sage-500" />
+              </div>
+              <div className="flex gap-2">
+                <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
+                <button onClick={() => fileInputRef.current?.click()} className="btn-ghost text-xs py-1.5 px-3 flex items-center gap-1">
+                  <Camera size={14} /> Subir foto
+                </button>
+                <button onClick={() => setEditAvatar('')} className="btn-ghost text-xs py-1.5 px-3 text-red-500 hover:text-red-600">
+                  Eliminar
+                </button>
+              </div>
+            </div>
+            
+            <p className="text-xs text-center text-gray-400 mt-2">O elige un animalito:</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {Object.keys(ANIMAL_ICONS).map(name => {
+                const AnimalIcon = ANIMAL_ICONS[name]
+                const isActive = editAvatar === `icon:${name}`
+                return (
+                  <button
+                    key={name}
+                    onClick={() => setEditAvatar(`icon:${name}`)}
+                    className={`p-2.5 rounded-xl transition-all ${
+                      isActive ? 'bg-sage-400 text-white shadow-md scale-110' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200'
+                    }`}
+                  >
+                    <AnimalIcon size={20} />
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-3 border-t border-peach-100 dark:border-gray-700">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre</label>
+              <input className="input" value={editName} onChange={e => setEditName(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+              <input className="input" type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nueva Contraseña (opcional)</label>
+              <input className="input" type="password" placeholder="Dejar en blanco para no cambiar" value={editPassword} onChange={e => setEditPassword(e.target.value)} />
+            </div>
+          </div>
+
+          <button onClick={handleSaveProfile} disabled={profileSaving || !editName || !editEmail} className="btn-patient w-full mt-4">
+            {profileSaving ? 'Guardando...' : 'Guardar Cambios'}
+          </button>
+        </div>
+      ) : (
+        <div 
+          onClick={openProfileEditor}
+          className="card flex items-center gap-4 cursor-pointer hover:shadow-md hover:border-sage-300 dark:hover:border-sage-700 transition-all group"
+        >
+          <div className="w-16 h-16 bg-sage-100 dark:bg-sage-900/30 rounded-full flex items-center justify-center overflow-hidden border border-sage-200 dark:border-sage-800">
+            <AvatarDisplay avatar={user?.avatar} size={32} className="text-sage-500" />
+          </div>
+          <div className="flex-1">
+            <div className="font-bold text-gray-800 dark:text-white text-lg group-hover:text-sage-600 transition-colors">{user?.name}</div>
+            <div className="text-sm text-gray-400">{user?.email}</div>
+            <div className="text-xs text-sage-500 font-semibold mt-0.5">Toca para editar perfil</div>
+          </div>
+        </div>
+      )}
 
       {/* Gestión de hábitos */}
       <div className="card space-y-3">
@@ -121,7 +268,7 @@ export default function PatientProfile() {
 
         {/* Formulario nuevo hábito */}
         {adding && (
-          <div className="bg-sage-50 dark:bg-sage-900/20 rounded-2xl p-4 space-y-3 animate-fade-in border border-sage-200 dark:border-sage-800">
+          <div className="bg-sage-50 dark:bg-sage-900/20 rounded-3xl p-4 space-y-3 animate-fade-in border border-sage-200 dark:border-sage-800">
             <IconSelector value={newIcon} onChange={setNewIcon} />
             <div className="flex gap-2">
               <input
@@ -136,7 +283,7 @@ export default function PatientProfile() {
               <button onClick={handleAddHabit} disabled={!newText.trim()} className="btn-patient text-sm flex-1">
                 Guardar hábito
               </button>
-              <button onClick={() => setAdding(false)} className="btn-ghost text-sm">
+              <button onClick={() => setAdding(false)} className="btn-ghost text-sm rounded-full">
                 <X size={16} />
               </button>
             </div>
@@ -154,7 +301,7 @@ export default function PatientProfile() {
             const IconComponent = HABIT_ICONS[habit.icon] || HABIT_ICONS.CheckCircle
             
             return (
-              <div key={habit.id} className="flex flex-col gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-2xl px-4 py-3">
+              <div key={habit.id} className="flex flex-col gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-2xl px-4 py-3 border border-transparent hover:border-gray-200 transition-colors">
                 {editingId === habit.id ? (
                   <>
                     <IconSelector value={editIcon} onChange={setEditIcon} />
@@ -163,33 +310,33 @@ export default function PatientProfile() {
                         className="input flex-1 py-1.5 text-sm"
                         value={editText}
                         onChange={e => setEditText(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleSaveEdit(habit.id)}
+                        onKeyDown={e => e.key === 'Enter' && handleSaveEditHabit(habit.id)}
                       />
-                      <button onClick={() => handleSaveEdit(habit.id)} className="p-1.5 text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 rounded-lg">
-                        <Check size={16} />
+                      <button onClick={() => handleSaveEditHabit(habit.id)} className="p-2 text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 rounded-xl">
+                        <Check size={18} />
                       </button>
-                      <button onClick={() => setEditingId(null)} className="p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-                        <X size={16} />
+                      <button onClick={() => setEditingId(null)} className="p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl">
+                        <X size={18} />
                       </button>
                     </div>
                   </>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <span className="text-sage-500 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-600">
+                    <span className="text-sage-500 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-peach-100 dark:border-gray-600">
                       <IconComponent size={20} />
                     </span>
                     <span className="flex-1 text-sm font-semibold text-gray-700 dark:text-gray-200">{habit.text}</span>
                     <button
                       onClick={() => { setEditingId(habit.id); setEditText(habit.text); setEditIcon(habit.icon) }}
-                      className="p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                      className="p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-colors"
                     >
-                      <Pencil size={14} />
+                      <Pencil size={15} />
                     </button>
                     <button
-                      onClick={() => handleDelete(habit.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      onClick={() => handleDeleteHabit(habit.id)}
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 )}
@@ -201,12 +348,12 @@ export default function PatientProfile() {
 
       {/* Vinculación con psicólogo */}
       <div className="card">
-        <h2 className="font-semibold text-gray-700 dark:text-gray-200 mb-1 flex items-center gap-2">
+        <h2 className="font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
           <Link2 size={18} /> Vinculación con psicólogo
         </h2>
         {user?.psychologistId ? (
-          <div className="bg-sage-50 dark:bg-sage-900/20 text-sage-700 dark:text-sage-300 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2">
-            <CheckCircle2 size={16} className="text-sage-500" /> Ya estás vinculado con tu psicólogo
+          <div className="bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-300 rounded-2xl px-4 py-3 text-sm font-medium flex items-center gap-2">
+            <CheckCircle2 size={18} className="text-sage-500" /> Ya estás vinculado con tu psicólogo
           </div>
         ) : (
           <>
@@ -216,13 +363,13 @@ export default function PatientProfile() {
             <form onSubmit={handleLink} className="flex gap-2">
               <input
                 type="text"
-                className="input flex-1 uppercase tracking-widest font-mono"
+                className="input flex-1 uppercase tracking-widest font-mono text-center"
                 placeholder="Ej: A1B2C3D4"
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 maxLength={8}
               />
-              <button type="submit" className="btn-patient px-4 py-3 shrink-0" disabled={linkLoading || !code}>
+              <button type="submit" className="btn-patient px-5 shrink-0" disabled={linkLoading || !code}>
                 {linkLoading ? '...' : 'Vincular'}
               </button>
             </form>
@@ -235,7 +382,7 @@ export default function PatientProfile() {
       {/* Cerrar sesión */}
       <button
         onClick={() => { logout(); navigate('/login') }}
-        className="w-full flex items-center justify-center gap-2 text-red-500 hover:text-red-700 font-semibold py-3 rounded-2xl border border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+        className="w-full flex items-center justify-center gap-2 text-red-500 hover:text-red-700 font-bold py-3.5 rounded-[20px] border-2 border-red-100 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
       >
         <LogOut size={18} />
         Cerrar sesión

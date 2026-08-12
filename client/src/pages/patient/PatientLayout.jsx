@@ -36,14 +36,7 @@ export default function PatientLayout() {
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* SOS — integrado al header, no flotante */}
-          <Link
-            to="/patient/emergency"
-            className="flex items-center gap-1.5 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 text-xs font-bold px-3 py-1.5 rounded-xl transition-all"
-          >
-            <Phone size={13} />
-            SOS
-          </Link>
+
 
           <button
             onClick={() => setDarkMode(!darkMode)}
