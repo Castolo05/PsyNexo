@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
-import { useAuth } from '../../../context/AuthContext'
-import api from '../../../lib/api'
+import { useAuth } from '../../context/AuthContext'
+import api from '../../lib/api'
 import {
   UserRound, X, Camera, Cat, Dog, Rabbit, Bird, Snail, Turtle, Fish, Rat
 } from 'lucide-react'
