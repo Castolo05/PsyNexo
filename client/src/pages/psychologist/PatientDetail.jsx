@@ -299,20 +299,28 @@ const PANELS = [
   { i: 'notes', label: 'Notas de Sesión', icon: Save },
 ]
 
+const PANEL_CONSTRAINTS = {
+  'pre-session': { minW: 1, minH: 3 },
+  'mood-chart': { minW: 1, minH: 5 },
+  'entries': { minW: 1, minH: 4 },
+  'goals': { minW: 1, minH: 4 },
+  'notes': { minW: 1, minH: 4 },
+}
+
 const DEFAULT_LAYOUTS = {
   lg: [
-    { i: 'pre-session', x: 0, y: 0, w: 2, h: 2, minW: 1, minH: 2 },
-    { i: 'mood-chart', x: 0, y: 2, w: 2, h: 4, minW: 1, minH: 3 },
-    { i: 'entries', x: 0, y: 6, w: 2, h: 7, minW: 1, minH: 4 },
-    { i: 'goals', x: 2, y: 0, w: 1, h: 5, minW: 1, minH: 3 },
-    { i: 'notes', x: 2, y: 5, w: 1, h: 8, minW: 1, minH: 4 },
+    { i: 'pre-session', x: 0, y: 0, w: 2, h: 3 },
+    { i: 'mood-chart', x: 0, y: 3, w: 2, h: 5 },
+    { i: 'entries', x: 0, y: 8, w: 2, h: 6 },
+    { i: 'goals', x: 2, y: 0, w: 1, h: 5 },
+    { i: 'notes', x: 2, y: 5, w: 1, h: 8 },
   ],
   md: [
-    { i: 'pre-session', x: 0, y: 0, w: 2, h: 2, minW: 1, minH: 2 },
-    { i: 'mood-chart', x: 0, y: 2, w: 2, h: 4, minW: 1, minH: 3 },
-    { i: 'entries', x: 0, y: 6, w: 2, h: 7, minW: 1, minH: 4 },
-    { i: 'goals', x: 0, y: 13, w: 2, h: 5, minW: 1, minH: 3 },
-    { i: 'notes', x: 0, y: 18, w: 2, h: 8, minW: 1, minH: 4 },
+    { i: 'pre-session', x: 0, y: 0, w: 2, h: 3 },
+    { i: 'mood-chart', x: 0, y: 3, w: 2, h: 5 },
+    { i: 'entries', x: 0, y: 8, w: 2, h: 6 },
+    { i: 'goals', x: 0, y: 14, w: 2, h: 5 },
+    { i: 'notes', x: 0, y: 19, w: 2, h: 8 },
   ]
 }
 
@@ -328,7 +336,18 @@ export default function PatientDetail() {
   // Layout modular
   const [layouts, setLayouts] = useState(() => {
     const saved = localStorage.getItem(`psych_dashboard_layout_${id}`)
-    return saved ? JSON.parse(saved) : DEFAULT_LAYOUTS
+    const parsedLayouts = saved ? JSON.parse(saved) : DEFAULT_LAYOUTS
+    
+    // Forzar restricciones mínimas de tamaño para evitar errores de renderizado
+    const enforcedLayouts = {}
+    for (const bp in parsedLayouts) {
+      enforcedLayouts[bp] = parsedLayouts[bp].map(item => ({
+        ...item,
+        minW: PANEL_CONSTRAINTS[item.i]?.minW || 1,
+        minH: PANEL_CONSTRAINTS[item.i]?.minH || 3
+      }))
+    }
+    return enforcedLayouts
   })
 
   const [visiblePanels, setVisiblePanels] = useState(() => {
