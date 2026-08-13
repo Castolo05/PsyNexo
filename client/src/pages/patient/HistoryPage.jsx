@@ -3,6 +3,7 @@ import api from '../../lib/api'
 import { MOOD_ICONS, HABIT_ICONS, formatDate, isEditable } from '../../lib/constants'
 import MoodIcon from '../../components/MoodIcon'
 import MoodCalendar from '../../components/MoodCalendar'
+import MoodChart from '../../components/MoodChart'
 import { Trash2, ChevronDown, ChevronUp, Clock, TrendingUp, TrendingDown, Minus, BarChart2, Book, Calendar } from 'lucide-react'
 
 // ── Tarjeta de correlación hábito-ánimo ──────────────────
@@ -113,7 +114,7 @@ export default function HistoryPage() {
   const [expanded, setExpanded] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [selectedDay, setSelectedDay] = useState(null)
-  const [tab, setTab] = useState('entries') // 'entries' | 'correlation'
+  const [tab, setTab] = useState('entries') // 'entries' | 'correlation' | 'chart'
 
   useEffect(() => {
     Promise.all([
@@ -165,26 +166,36 @@ export default function HistoryPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl">
+      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl mb-4">
         <button
           onClick={() => setTab('entries')}
-          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 ${
             tab === 'entries'
               ? 'bg-white dark:bg-gray-700 text-sage-600 shadow-sm'
               : 'text-gray-500 dark:text-gray-400'
           }`}
         >
-          <Book size={16} /> Entradas
+          <Book size={14} /> Entradas
+        </button>
+        <button
+          onClick={() => setTab('chart')}
+          className={`flex-1 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+            tab === 'chart'
+              ? 'bg-white dark:bg-gray-700 text-sage-600 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400'
+          }`}
+        >
+          <TrendingUp size={14} /> Evolución
         </button>
         <button
           onClick={() => setTab('correlation')}
-          className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 ${
             tab === 'correlation'
               ? 'bg-white dark:bg-gray-700 text-sage-600 shadow-sm'
               : 'text-gray-500 dark:text-gray-400'
           }`}
         >
-          <BarChart2 size={16} /> Hábitos y ánimo
+          <BarChart2 size={14} /> Hábitos
         </button>
       </div>
 
@@ -201,11 +212,49 @@ export default function HistoryPage() {
           )
       )}
 
-      {/* TAB: Entradas */}
-      {tab === 'entries' && (
+      {/* TAB: Gráfico */}
+      {tab === 'chart' && (
         <>
-          {/* Calendario de ánimo */}
-          {entries.length > 0 && (
+          {entries.length >= 2 ? (
+            <div className="card mb-4">
+              <MoodChart 
+                entries={entries} 
+                mode="patient" 
+                height={200} 
+                onDayClick={handleDayClick} 
+              />
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-400">
+              <TrendingUp size={40} className="mx-auto mb-3 text-gray-300" />
+              <p className="font-medium">Sin datos suficientes aún</p>
+              <p className="text-sm mt-1">Registrá al menos 2 días para ver tu evolución.</p>
+            </div>
+          )}
+
+          {selectedDay && (
+            <div className="flex items-center justify-between mb-2 px-1">
+              <p className="text-xs text-sage-600 dark:text-sage-400 font-semibold flex items-center gap-1">
+                <Calendar size={14} /> {selectedDay.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </p>
+              <button onClick={() => setSelectedDay(null)} className="text-xs text-gray-400 hover:text-gray-600 underline">
+                Cerrar
+              </button>
+            </div>
+          )}
+          {!selectedDay && entries.length >= 2 && (
+            <div className="text-center py-4 text-gray-400 text-sm">
+              Tocá un punto en el gráfico para ver la nota de ese día.
+            </div>
+          )}
+        </>
+      )}
+
+      {/* RENDERIZADO DE ENTRADAS (Para la tab 'entries' o cuando hay un 'selectedDay' en 'chart') */}
+      {(tab === 'entries' || (tab === 'chart' && selectedDay)) && (
+        <>
+          {/* Calendario de ánimo (Solo en tab entries) */}
+          {tab === 'entries' && entries.length > 0 && (
             <div>
               <MoodCalendar
                 entries={entries}

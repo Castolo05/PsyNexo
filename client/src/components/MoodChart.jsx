@@ -61,7 +61,7 @@ const CustomDot = (props) => {
  *   days?: number | 'all'
  *   onDaysChange?: function
  */
-export default function MoodChart({ entries = [], days = 14, onDaysChange, mode = 'patient', height = 220, showSelector = true }) {
+export default function MoodChart({ entries = [], days = 14, onDaysChange, mode = 'patient', height = 220, showSelector = true, onDayClick }) {
   // Use internal state only if onDaysChange is not provided
   const [internalDays, setInternalDays] = useState(days)
   const currentDays = onDaysChange ? days : internalDays
@@ -88,6 +88,7 @@ export default function MoodChart({ entries = [], days = 14, onDaysChange, mode 
       .map((e) => ({
         dateLabel: formatDateShort(e.createdAt),
         mood: e.moodScore,
+        rawDate: e.createdAt,
       }))
   }, [entries, currentDays])
 
@@ -122,7 +123,15 @@ export default function MoodChart({ entries = [], days = 14, onDaysChange, mode 
       ) : (
         <div className="flex-1 min-h-0 w-full relative">
           <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 8, right: 4, bottom: 0, left: -24 }}>
+          <LineChart 
+            data={chartData} 
+            margin={{ top: 8, right: 4, bottom: 0, left: -24 }}
+            onClick={(e) => {
+              if (onDayClick && e && e.activePayload && e.activePayload.length > 0) {
+                onDayClick(new Date(e.activePayload[0].payload.rawDate))
+              }
+            }}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
             <XAxis
               dataKey="dateLabel"
@@ -146,7 +155,7 @@ export default function MoodChart({ entries = [], days = 14, onDaysChange, mode 
               stroke={lineColor}
               strokeWidth={2.5}
               dot={chartData.length <= 15 ? <CustomDot /> : false}
-              activeDot={{ r: 7, fill: lineColor }}
+              activeDot={{ r: 7, fill: lineColor, cursor: onDayClick ? 'pointer' : 'default' }}
             />
           </LineChart>
         </ResponsiveContainer>

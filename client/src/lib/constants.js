@@ -10,8 +10,8 @@ export const MOOD_ICONS = {
   4:  { icon: 'Wind',           label: 'Regular',     color: '#ca8a04', bg: '#fefce8', darkBg: '#422006' },
   5:  { icon: 'Minus',          label: 'Neutro',      color: '#65a30d', bg: '#f7fee7', darkBg: '#1a2e05' },
   6:  { icon: 'CloudSun',       label: 'Bien',        color: '#16a34a', bg: '#f0fdf4', darkBg: '#052e16' },
-  7:  { icon: 'Sun',            label: 'Bastante bien', color: '#059669', bg: '#ecfdf5', darkBg: '#022c22' },
-  8:  { icon: 'Sparkles',       label: 'Muy bien',    color: '#0d9488', bg: '#f0fdfa', darkBg: '#042f2e' },
+  7:  { icon: 'Sun',            label: 'Muy bien', color: '#059669', bg: '#ecfdf5', darkBg: '#022c22' },
+  8:  { icon: 'Sparkles',       label: 'Genial',    color: '#0d9488', bg: '#f0fdfa', darkBg: '#042f2e' },
   9:  { icon: 'Star',           label: 'Excelente',   color: '#4f46e5', bg: '#eef2ff', darkBg: '#1e1b4b' },
   10: { icon: 'Zap',            label: 'Perfecto',    color: '#7c3aed', bg: '#faf5ff', darkBg: '#2e1065' },
 }

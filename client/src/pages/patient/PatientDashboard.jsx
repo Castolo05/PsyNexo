@@ -373,28 +373,7 @@ export default function PatientDashboard() {
         </div>
       )}
 
-      {/* ── Gráfico ── */}
-      {entries.length >= 2 && (
-        <div className="card">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-1.5">
-              <TrendingUp size={14} className="text-sage-500" />
-              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Evolución</span>
-            </div>
-            {avgMood && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] text-gray-400">promedio</span>
-                <MoodIcon score={Math.round(avgMood)} size={13} />
-                <span className="text-sm font-extrabold tabular-nums"
-                      style={{ color: MOOD_ICONS[Math.round(avgMood)]?.color }}>
-                  {avgMood}/10
-                </span>
-              </div>
-            )}
-          </div>
-          <MoodChart entries={entries} mode="patient" height={155} days={chartDays} onDaysChange={setChartDays} />
-        </div>
-      )}
+      {/* ── Gráfico (movido a Historial) ── */}
     </div>
   )
 }
