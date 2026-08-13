@@ -19,7 +19,12 @@ export default function PatientLayout() {
   }, [darkMode])
 
   useEffect(() => {
-    window.scrollTo(0, 0)
+    const scrollableMain = document.getElementById('scrollable-main')
+    if (scrollableMain) {
+      scrollableMain.scrollTo(0, 0)
+    } else {
+      window.scrollTo(0, 0)
+    }
   }, [location.pathname])
 
   const handleLogout = () => { logout(); navigate('/login') }
@@ -31,9 +36,9 @@ export default function PatientLayout() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#EFF2F7] dark:bg-gray-950 transition-colors duration-300">
+    <div className="h-[100dvh] flex flex-col bg-[#EFF2F7] dark:bg-gray-950 transition-colors duration-300 overflow-hidden">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/90 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between shadow-sm">
+      <header className="shrink-0 z-50 bg-white/90 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2">
           <span className="text-2xl">🧠</span>
           <span className="font-bold text-lg text-gray-800 dark:text-white">NexoMente</span>
@@ -61,12 +66,14 @@ export default function PatientLayout() {
       </header>
 
       {/* Contenido */}
-      <main className="max-w-lg mx-auto px-4 py-6 pb-28 min-h-[calc(100vh-64px)]">
-        <Outlet />
+      <main id="scrollable-main" className="flex-1 overflow-y-auto">
+        <div className="max-w-lg mx-auto px-4 py-6 pb-6">
+          <Outlet />
+        </div>
       </main>
 
       {/* Nav inferior */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 shadow-lg">
+      <nav className="shrink-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 shadow-lg">
         <div className="max-w-lg mx-auto flex justify-around items-center py-2">
           {navItems.map(({ to, icon, label }) => {
             const active = location.pathname === to
