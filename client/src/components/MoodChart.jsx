@@ -92,7 +92,7 @@ export default function MoodChart({ entries = [], days = 14, onDaysChange, mode 
   }, [entries, currentDays])
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col w-full" style={{ height }}>
       {/* Selector de período */}
       {showSelector && (
         <div className="flex gap-1 mb-3">

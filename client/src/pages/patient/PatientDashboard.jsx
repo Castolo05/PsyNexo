@@ -66,12 +66,9 @@ function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], ha
           {[1,2,3,4,5,6,7,8,9,10].map((n) => (
             <button key={n} type="button" onClick={() => setMood(n)}
               className="text-[10px] font-bold transition-all"
-              style={mood === n ? { color: moodConfig.color, transform: 'scale(1.3)' } : { color: '#d1d5db' }}
+              style={mood === n ? { color: moodConfig.color, transform: 'scale(1.15)' } : { color: '#d1d5db' }}
             >{n}</button>
           ))}
-        </div>
-        <div className="flex justify-between text-[10px] text-gray-400 mt-1.5 px-0.5">
-          <span>😔 Muy mal</span><span>🌟 Perfecto</span>
         </div>
       </div>
 

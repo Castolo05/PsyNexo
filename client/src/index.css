@@ -182,6 +182,7 @@ body {
   outline: none;
   cursor: grab;
   transition: background 0.15s ease;
+  touch-action: none;
 }
 .mood-slider:active {
   cursor: grabbing;
