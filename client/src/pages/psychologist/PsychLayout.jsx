@@ -32,7 +32,7 @@ export default function PsychLayout() {
         {/* Logo */}
         <div className="flex items-center gap-2 px-2 mb-8">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 rounded-xl shadow-sm" />
-          <span className="font-bold text-gray-900 dark:text-white text-lg">NexoMente</span>
+          <span className="font-bold text-gray-900 dark:text-white text-lg">SOMA</span>
         </div>
 
         {/* Nav */}
@@ -96,7 +96,7 @@ export default function PsychLayout() {
         <header className="lg:hidden bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-lg shadow-sm" />
-            <span className="font-bold text-gray-800 dark:text-white">NexoMente</span>
+            <span className="font-bold text-gray-800 dark:text-white">SOMA</span>
           </div>
           <div className="flex gap-1 items-center">
             {navItems.map(({ to, icon }) => (

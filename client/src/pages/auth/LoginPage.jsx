@@ -31,9 +31,9 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl shadow-lg mb-4 overflow-hidden border border-gray-100">
-            <img src="/logo.png" alt="NexoMente Logo" className="w-full h-full object-cover" />
+            <img src="/logo.png" alt="SOMA Logo" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800">NexoMente</h1>
+          <h1 className="text-3xl font-bold text-gray-800">SOMA</h1>
           <p className="text-gray-500 mt-1">Tu espacio seguro de bienestar mental</p>
         </div>
 

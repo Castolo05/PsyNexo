@@ -41,7 +41,7 @@ export default function PatientLayout() {
       <header className="shrink-0 z-50 bg-white/90 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-[10px] shadow-sm" />
-          <span className="font-bold text-lg text-gray-800 dark:text-white">NexoMente</span>
+          <span className="font-bold text-lg text-gray-800 dark:text-white">SOMA</span>
         </div>
 
         <div className="flex items-center gap-1.5">

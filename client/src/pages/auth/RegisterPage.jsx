@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { Brain, UserRound, Stethoscope } from 'lucide-react'
+import { UserRound, Stethoscope } from 'lucide-react'
 
 export default function RegisterPage() {
   const { register } = useAuth()
@@ -28,10 +28,10 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sage-50 via-white to-lavender-100 p-4">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-sage-300 rounded-2xl shadow-lg mb-4">
-            <Brain className="text-white" size={32} />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl shadow-lg mb-4 overflow-hidden border border-gray-100">
+            <img src="/logo.png" alt="SOMA Logo" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800">NexoMente</h1>
+          <h1 className="text-3xl font-bold text-gray-800">SOMA</h1>
           <p className="text-gray-500 mt-1">Crea tu cuenta gratuita</p>
         </div>
 

@@ -19,7 +19,7 @@ export default function EmergencyPage() {
           <div>
             <h1 className="font-bold text-red-700 dark:text-red-400 text-lg">Aviso importante</h1>
             <p className="text-red-600 dark:text-red-300 text-sm mt-1 leading-relaxed">
-              <strong>NexoMente no es un servicio de crisis ni emergencias.</strong> Si estás en peligro inmediato o experimentas pensamientos de hacerte daño, por favor comunícate con una línea de crisis o llama a emergencias (911).
+              <strong>SOMA no es un servicio de crisis ni emergencias.</strong> Si estás en peligro inmediato o experimentas pensamientos de hacerte daño, por favor comunícate con una línea de crisis o llama a emergencias (911).
             </p>
           </div>
         </div>
