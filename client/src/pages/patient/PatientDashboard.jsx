@@ -250,7 +250,7 @@ export default function PatientDashboard() {
           {todayString()}
         </p>
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white mt-0.5">
-          {greeting}, {user?.name?.split(' ')[0]} 👋
+          {greeting}, {user?.name?.split(' ')[0]}
         </h1>
       </div>
 

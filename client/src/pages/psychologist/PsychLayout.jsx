@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { LayoutDashboard, Users, LogOut, Brain, ChevronRight, Moon, Sun } from 'lucide-react'
+import { LayoutDashboard, Users, LogOut, ChevronRight, Moon, Sun } from 'lucide-react'
 
 export default function PsychLayout() {
   const { user, logout } = useAuth()
@@ -31,9 +31,7 @@ export default function PsychLayout() {
       <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex-col py-6 px-4 shrink-0 hidden lg:flex transition-colors duration-300 sticky top-0 h-screen overflow-y-auto">
         {/* Logo */}
         <div className="flex items-center gap-2 px-2 mb-8">
-          <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center">
-            <Brain size={20} className="text-white" />
-          </div>
+          <img src="/logo.png" alt="Logo" className="w-9 h-9 rounded-xl shadow-sm" />
           <span className="font-bold text-gray-900 dark:text-white text-lg">NexoMente</span>
         </div>
 
@@ -97,7 +95,7 @@ export default function PsychLayout() {
         {/* Top bar móvil */}
         <header className="lg:hidden bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Brain size={22} className="text-indigo-600" />
+            <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-lg shadow-sm" />
             <span className="font-bold text-gray-800 dark:text-white">NexoMente</span>
           </div>
           <div className="flex gap-1 items-center">
