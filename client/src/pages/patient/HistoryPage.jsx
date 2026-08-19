@@ -404,7 +404,7 @@ export default function HistoryPage() {
                                   const hd = entry.habitData?.[h.id] || {}
                                   return (
                                     <div key={h.id}>
-                                      <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-medium">
+                                      <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-300 font-medium">
                                         <IconComp size={14} /> {h.text}
                                         <span className="font-bold ml-0.5">{hd.qty} {h.unit}</span>
                                       </span>

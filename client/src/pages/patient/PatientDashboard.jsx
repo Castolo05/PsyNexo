@@ -214,13 +214,13 @@ function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], in
                 const hasValue = hData.qty !== undefined && hData.qty !== ''
                 return (
                   <div key={habit.id} className={`rounded-2xl border-2 transition-all overflow-hidden ${
-                    hasValue ? 'border-indigo-300 dark:border-indigo-700 bg-indigo-50/50 dark:bg-indigo-900/10' : 'border-gray-200 dark:border-gray-600'
+                    hasValue ? 'border-sage-400 bg-sage-50 dark:bg-sage-900/20' : 'border-gray-200 dark:border-gray-600'
                   }`}>
                     <div className="flex items-center gap-3 px-4 py-3">
-                      <span className={`p-1.5 rounded-lg ${hasValue ? 'bg-white dark:bg-indigo-900/30 text-indigo-500 shadow-sm' : 'text-gray-400'}`}>
+                      <span className={`p-1.5 rounded-lg ${hasValue ? 'bg-white dark:bg-sage-800 text-sage-500 shadow-sm' : 'text-gray-400'}`}>
                         <IconComp size={18} />
                       </span>
-                      <span className={`flex-1 text-sm font-semibold ${hasValue ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-300'}`}>
+                      <span className={`flex-1 text-sm font-semibold ${hasValue ? 'text-sage-700 dark:text-sage-300' : 'text-gray-600 dark:text-gray-300'}`}>
                         {habit.text}
                       </span>
                       <div className="flex items-center gap-2 shrink-0">
@@ -228,7 +228,7 @@ function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], in
                           type="number"
                           min="0"
                           step="0.1"
-                          className="w-20 text-center rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-1.5 px-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                          className="w-20 text-center rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-1.5 px-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-sage-400"
                           placeholder="—"
                           value={hData.qty ?? ''}
                           onChange={e => setHabitField(habit.id, 'qty', e.target.value === '' ? '' : parseFloat(e.target.value))}
@@ -488,7 +488,7 @@ export default function PatientDashboard() {
                   const IconComp = HABIT_ICONS[h.icon] || HABIT_ICONS.CheckCircle
                   const qty = todayEntry.habitData[h.id].qty
                   return (
-                    <span key={h.id} className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-medium">
+                    <span key={h.id} className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-300 font-medium">
                       <IconComp size={12} /> {h.text}: <span className="font-bold">{qty} {h.unit}</span>
                     </span>
                   )

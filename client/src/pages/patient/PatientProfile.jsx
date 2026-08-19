@@ -211,7 +211,7 @@ export default function PatientProfile() {
 
         {/* Formulario nuevo hábito */}
         {adding && (
-          <div className="bg-sage-50 dark:bg-sage-900/20 rounded-3xl p-4 space-y-3 animate-fade-in border border-sage-200 dark:border-sage-800">
+          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-3xl p-4 space-y-3 animate-fade-in border border-gray-200 dark:border-gray-600">
             <IconSelector value={newIcon} onChange={setNewIcon} />
             <input
               className="input"
