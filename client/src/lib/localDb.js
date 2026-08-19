@@ -430,7 +430,7 @@ export function journalList(userId, role, patientId) {
   return entries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 }
 
-export function journalCreate(userId, { moodScore, content, completedHabits }) {
+export function journalCreate(userId, { moodScore, content, completedHabits, habitData }) {
   const all = read(KEYS.journal)
   const todayStr = new Date().toDateString()
   const todayExists = all.find(e => e.patientId === userId && new Date(e.createdAt).toDateString() === todayStr)
@@ -439,12 +439,20 @@ export function journalCreate(userId, { moodScore, content, completedHabits }) {
     err.status = 409
     throw err
   }
+  // Derive completedHabits: include toggle habits + toggle+qty habits that are done
+  const mergedCompleted = [...(completedHabits || [])]
+  if (habitData) {
+    Object.entries(habitData).forEach(([id, data]) => {
+      if (data.done === true && !mergedCompleted.includes(id)) mergedCompleted.push(id)
+    })
+  }
   const entry = {
     id: genId(),
     patientId: userId,
     moodScore,
     content: content || '',
-    completedHabits: completedHabits || [],
+    completedHabits: mergedCompleted,
+    habitData: habitData || {},
     flaggedForSession: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -454,11 +462,25 @@ export function journalCreate(userId, { moodScore, content, completedHabits }) {
   return entry
 }
 
-export function journalUpdate(userId, entryId, { moodScore, content, completedHabits }) {
+export function journalUpdate(userId, entryId, { moodScore, content, completedHabits, habitData }) {
   const all = read(KEYS.journal)
   const idx = all.findIndex(e => e.id === entryId && e.patientId === userId)
   if (idx === -1) throw new Error('Entrada no encontrada.')
-  all[idx] = { ...all[idx], moodScore, content, completedHabits: completedHabits || [], updatedAt: new Date().toISOString() }
+  // Derive completedHabits
+  const mergedCompleted = [...(completedHabits || [])]
+  if (habitData) {
+    Object.entries(habitData).forEach(([id, data]) => {
+      if (data.done === true && !mergedCompleted.includes(id)) mergedCompleted.push(id)
+    })
+  }
+  all[idx] = {
+    ...all[idx],
+    moodScore,
+    content,
+    completedHabits: mergedCompleted,
+    habitData: habitData || all[idx].habitData || {},
+    updatedAt: new Date().toISOString(),
+  }
   write(KEYS.journal, all)
   return all[idx]
 }
@@ -634,7 +656,7 @@ export function habitsList(userId) {
     .sort((a, b) => a.order - b.order)
 }
 
-export function habitCreate(userId, { text, icon = 'CheckCircle' }) {
+export function habitCreate(userId, { text, icon = 'CheckCircle', trackingType = 'toggle', unit = '', hasNote = false }) {
   const all = read(KEYS.habits)
   const userHabits = all.filter(h => h.userId === userId)
   const habit = {
@@ -642,6 +664,9 @@ export function habitCreate(userId, { text, icon = 'CheckCircle' }) {
     userId,
     text,
     icon,
+    trackingType, // 'toggle' | 'toggle+qty' | 'qty'
+    unit,         // e.g. 'km', 'horas', 'vasos'
+    hasNote,      // boolean: show optional freetext per entry
     order: userHabits.length,
     createdAt: new Date().toISOString(),
   }
@@ -650,12 +675,15 @@ export function habitCreate(userId, { text, icon = 'CheckCircle' }) {
   return habit
 }
 
-export function habitUpdate(userId, habitId, { text, icon }) {
+export function habitUpdate(userId, habitId, { text, icon, trackingType, unit, hasNote }) {
   const all = read(KEYS.habits)
   const idx = all.findIndex(h => h.id === habitId && h.userId === userId)
   if (idx === -1) throw new Error('Hábito no encontrado.')
   if (text !== undefined) all[idx].text = text
   if (icon !== undefined) all[idx].icon = icon
+  if (trackingType !== undefined) all[idx].trackingType = trackingType
+  if (unit !== undefined) all[idx].unit = unit
+  if (hasNote !== undefined) all[idx].hasNote = hasNote
   write(KEYS.habits, all)
   return all[idx]
 }
@@ -666,6 +694,9 @@ export function habitDelete(userId, habitId) {
   journal.forEach(e => {
     if (e.completedHabits) {
       e.completedHabits = e.completedHabits.filter(id => id !== habitId)
+    }
+    if (e.habitData && e.habitData[habitId] !== undefined) {
+      delete e.habitData[habitId]
     }
   })
   write(KEYS.journal, journal)
@@ -679,9 +710,21 @@ export function habitCorrelation(userId) {
   const entries = read(KEYS.journal).filter(e => e.patientId === userId)
   if (entries.length < 5) return []
 
-  return habits.map(habit => {
-    const withHabit    = entries.filter(e => (e.completedHabits || []).includes(habit.id))
-    const withoutHabit = entries.filter(e => !(e.completedHabits || []).includes(habit.id))
+  // Solo correlacionar hábitos toggle o toggle+qty (tienen done/no done binario)
+  const correlatableHabits = habits.filter(h =>
+    !h.trackingType || h.trackingType === 'toggle' || h.trackingType === 'toggle+qty'
+  )
+
+  return correlatableHabits.map(habit => {
+    const isDone = (entry) => {
+      if (!habit.trackingType || habit.trackingType === 'toggle') {
+        return (entry.completedHabits || []).includes(habit.id)
+      }
+      // toggle+qty: done comes from habitData
+      return entry.habitData?.[habit.id]?.done === true
+    }
+    const withHabit    = entries.filter(e => isDone(e))
+    const withoutHabit = entries.filter(e => !isDone(e))
     const avg = arr => arr.length ? parseFloat((arr.reduce((s, e) => s + e.moodScore, 0) / arr.length).toFixed(2)) : null
     const avgWith    = avg(withHabit)
     const avgWithout = avg(withoutHabit)
@@ -694,9 +737,9 @@ export function habitCorrelation(userId) {
       icon:       habit.icon,
       avgWith,
       avgWithout,
-      impact,       // positivo = mejora el ánimo, negativo = lo baja
+      impact,
       countWith:    withHabit.length,
       countWithout: withoutHabit.length,
     }
-  }).filter(r => r.countWith >= 3) // solo mostrar si hay suficientes datos
+  }).filter(r => r.countWith >= 3)
 }

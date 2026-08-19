@@ -349,21 +349,73 @@ export default function HistoryPage() {
                         {entry.content && (
                           <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{entry.content}</p>
                         )}
-                        {entryHabits.length > 0 && (
-                          <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hábitos completados</p>
-                            <div className="flex flex-wrap gap-2">
-                              {entryHabits.map(h => {
-                                const IconComp = HABIT_ICONS[h.icon] || HABIT_ICONS.CheckCircle
-                                return (
-                                  <span key={h.id} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-300 font-medium">
-                                    <IconComp size={14} /> {h.text}
-                                  </span>
-                                )
-                              })}
+                        {(() => {
+                          // Hábitos toggle completados
+                          const toggleDone = habits.filter(h =>
+                            (!h.trackingType || h.trackingType === 'toggle') &&
+                            (entry.completedHabits || []).includes(h.id)
+                          )
+                          // Hábitos toggle+qty: completados via habitData.done
+                          const qtyToggleDone = habits.filter(h =>
+                            h.trackingType === 'toggle+qty' &&
+                            entry.habitData?.[h.id]?.done === true
+                          )
+                          // Hábitos qty: siempre se muestran si tienen valor
+                          const qtyOnly = habits.filter(h =>
+                            h.trackingType === 'qty' &&
+                            entry.habitData?.[h.id]?.qty !== undefined &&
+                            entry.habitData?.[h.id]?.qty !== ''
+                          )
+                          const allHabits = [...toggleDone, ...qtyToggleDone, ...qtyOnly]
+                          if (allHabits.length === 0) return null
+                          return (
+                            <div>
+                              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hábitos</p>
+                              <div className="flex flex-wrap gap-2">
+                                {toggleDone.map(h => {
+                                  const IconComp = HABIT_ICONS[h.icon] || HABIT_ICONS.CheckCircle
+                                  const note = entry.habitData?.[h.id]?.note
+                                  return (
+                                    <div key={h.id}>
+                                      <span className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-300 font-medium">
+                                        <IconComp size={14} /> {h.text}
+                                      </span>
+                                      {note && <p className="text-[11px] text-gray-400 mt-0.5 pl-1 italic">{note}</p>}
+                                    </div>
+                                  )
+                                })}
+                                {qtyToggleDone.map(h => {
+                                  const IconComp = HABIT_ICONS[h.icon] || HABIT_ICONS.CheckCircle
+                                  const hd = entry.habitData?.[h.id] || {}
+                                  return (
+                                    <div key={h.id}>
+                                      <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-300 font-medium">
+                                        <IconComp size={14} /> {h.text}
+                                        {hd.qty !== undefined && hd.qty !== '' && (
+                                          <span className="font-bold text-sage-600 dark:text-sage-400 ml-0.5">{hd.qty} {h.unit}</span>
+                                        )}
+                                      </span>
+                                      {hd.note && <p className="text-[11px] text-gray-400 mt-0.5 pl-1 italic">{hd.note}</p>}
+                                    </div>
+                                  )
+                                })}
+                                {qtyOnly.map(h => {
+                                  const IconComp = HABIT_ICONS[h.icon] || HABIT_ICONS.CheckCircle
+                                  const hd = entry.habitData?.[h.id] || {}
+                                  return (
+                                    <div key={h.id}>
+                                      <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-medium">
+                                        <IconComp size={14} /> {h.text}
+                                        <span className="font-bold ml-0.5">{hd.qty} {h.unit}</span>
+                                      </span>
+                                      {hd.note && <p className="text-[11px] text-gray-400 mt-0.5 pl-1 italic">{hd.note}</p>}
+                                    </div>
+                                  )
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )
+                        })()}
                         {!canEdit && (
                           <p className="flex items-center gap-1 text-xs text-gray-400">
                             <Clock size={11} /> Solo editable en las primeras 24h

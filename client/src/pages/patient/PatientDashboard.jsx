@@ -23,10 +23,13 @@ function formatAppointmentDate(dateStr) {
 }
 
 // ── Formulario de nota inline ────────────────────────────────────
-function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], habits = [], onSubmit, onCancel, isEdit = false, submitting }) {
+function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], initialHabitData = {}, habits = [], onSubmit, onCancel, isEdit = false, submitting }) {
   const [mood, setMood] = useState(initialMood)
   const [content, setContent] = useState(initialContent)
+  // For "toggle" habits: array of IDs
   const [completedHabits, setCompletedHabits] = useState(initialHabits)
+  // For "toggle+qty" and "qty" habits: { [habitId]: { done?, qty, note } }
+  const [habitData, setHabitData] = useState(initialHabitData)
   const [preferInSession, setPreferInSession] = useState(false)
 
   const moodConfig = MOOD_ICONS[mood]
@@ -35,9 +38,12 @@ function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], ha
   const toggleHabit = (id) =>
     setCompletedHabits(prev => prev.includes(id) ? prev.filter(h => h !== id) : [...prev, id])
 
+  const setHabitField = (id, field, value) =>
+    setHabitData(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }))
+
   const handleSubmit = () => {
     if (!preferInSession && !content.trim()) return
-    onSubmit({ mood, content, completedHabits })
+    onSubmit({ mood, content, completedHabits, habitData })
   }
 
   return (
@@ -105,32 +111,147 @@ function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], ha
           <label className="label">¿Qué hábitos cumpliste hoy?</label>
           <div className="space-y-2">
             {habits.map(habit => {
-              const done = completedHabits.includes(habit.id)
+              const type = habit.trackingType || 'toggle'
               const IconComp = HABIT_ICONS[habit.icon] || HABIT_ICONS.CheckCircle
-              return (
-                <button
-                  key={habit.id}
-                  type="button"
-                  onClick={() => toggleHabit(habit.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border-2 transition-all text-left ${
-                    done
-                      ? 'border-sage-400 bg-sage-50 dark:bg-sage-900/20'
-                      : 'border-gray-200 dark:border-gray-600 hover:border-sage-300'
-                  }`}
-                >
-                  <span className={`p-1.5 rounded-lg ${done ? 'bg-white dark:bg-sage-800 text-sage-500 shadow-sm' : 'text-gray-400'}`}>
-                    <IconComp size={18} />
-                  </span>
-                  <span className={`flex-1 text-sm font-semibold ${
-                    done ? 'text-sage-700 dark:text-sage-300' : 'text-gray-600 dark:text-gray-300'
-                  }`}>{habit.text}</span>
-                  <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                    done ? 'bg-sage-400 border-sage-400' : 'border-gray-300 dark:border-gray-500'
+              const hData = habitData[habit.id] || {}
+
+              // ── TOGGLE (comportamiento clásico) ──────────────────
+              if (type === 'toggle') {
+                const done = completedHabits.includes(habit.id)
+                return (
+                  <div key={habit.id}>
+                    <button
+                      type="button"
+                      onClick={() => toggleHabit(habit.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border-2 transition-all text-left ${
+                        done
+                          ? 'border-sage-400 bg-sage-50 dark:bg-sage-900/20'
+                          : 'border-gray-200 dark:border-gray-600 hover:border-sage-300'
+                      }`}
+                    >
+                      <span className={`p-1.5 rounded-lg ${done ? 'bg-white dark:bg-sage-800 text-sage-500 shadow-sm' : 'text-gray-400'}`}>
+                        <IconComp size={18} />
+                      </span>
+                      <span className={`flex-1 text-sm font-semibold ${done ? 'text-sage-700 dark:text-sage-300' : 'text-gray-600 dark:text-gray-300'}`}>
+                        {habit.text}
+                      </span>
+                      <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                        done ? 'bg-sage-400 border-sage-400' : 'border-gray-300 dark:border-gray-500'
+                      }`}>
+                        {done && <span className="text-white text-xs font-bold">✓</span>}
+                      </span>
+                    </button>
+                    {done && habit.hasNote && (
+                      <input
+                        type="text"
+                        className="input mt-1.5 text-sm py-2"
+                        placeholder="Aclaración opcional..."
+                        value={hData.note || ''}
+                        onChange={e => setHabitField(habit.id, 'note', e.target.value)}
+                      />
+                    )}
+                  </div>
+                )
+              }
+
+              // ── TOGGLE + CANTIDAD ────────────────────────────────
+              if (type === 'toggle+qty') {
+                const done = hData.done === true
+                return (
+                  <div key={habit.id} className={`rounded-2xl border-2 transition-all overflow-hidden ${
+                    done ? 'border-sage-400 bg-sage-50 dark:bg-sage-900/20' : 'border-gray-200 dark:border-gray-600'
                   }`}>
-                    {done && <span className="text-white text-xs font-bold">✓</span>}
-                  </span>
-                </button>
-              )
+                    {/* Toggle row */}
+                    <button
+                      type="button"
+                      onClick={() => setHabitField(habit.id, 'done', !done)}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                    >
+                      <span className={`p-1.5 rounded-lg ${done ? 'bg-white dark:bg-sage-800 text-sage-500 shadow-sm' : 'text-gray-400'}`}>
+                        <IconComp size={18} />
+                      </span>
+                      <span className={`flex-1 text-sm font-semibold ${done ? 'text-sage-700 dark:text-sage-300' : 'text-gray-600 dark:text-gray-300'}`}>
+                        {habit.text}
+                      </span>
+                      <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                        done ? 'bg-sage-400 border-sage-400' : 'border-gray-300 dark:border-gray-500'
+                      }`}>
+                        {done && <span className="text-white text-xs font-bold">✓</span>}
+                      </span>
+                    </button>
+                    {/* Cantidad + nota si está marcado */}
+                    {done && (
+                      <div className="px-4 pb-3 space-y-2 border-t border-sage-200 dark:border-sage-800/50 pt-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            className="input py-2 text-sm w-28 text-center"
+                            placeholder="0"
+                            value={hData.qty ?? ''}
+                            onChange={e => setHabitField(habit.id, 'qty', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                          />
+                          <span className="text-sm font-semibold text-sage-600 dark:text-sage-400">{habit.unit || 'unidades'}</span>
+                        </div>
+                        {habit.hasNote && (
+                          <input
+                            type="text"
+                            className="input text-sm py-2"
+                            placeholder="Aclaración opcional..."
+                            value={hData.note || ''}
+                            onChange={e => setHabitField(habit.id, 'note', e.target.value)}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
+              // ── SOLO CANTIDAD (qty) ──────────────────────────────
+              if (type === 'qty') {
+                const hasValue = hData.qty !== undefined && hData.qty !== ''
+                return (
+                  <div key={habit.id} className={`rounded-2xl border-2 transition-all overflow-hidden ${
+                    hasValue ? 'border-indigo-300 dark:border-indigo-700 bg-indigo-50/50 dark:bg-indigo-900/10' : 'border-gray-200 dark:border-gray-600'
+                  }`}>
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <span className={`p-1.5 rounded-lg ${hasValue ? 'bg-white dark:bg-indigo-900/30 text-indigo-500 shadow-sm' : 'text-gray-400'}`}>
+                        <IconComp size={18} />
+                      </span>
+                      <span className={`flex-1 text-sm font-semibold ${hasValue ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-300'}`}>
+                        {habit.text}
+                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          className="w-20 text-center rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-1.5 px-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                          placeholder="—"
+                          value={hData.qty ?? ''}
+                          onChange={e => setHabitField(habit.id, 'qty', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                        />
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap">{habit.unit || 'unidades'}</span>
+                      </div>
+                    </div>
+                    {habit.hasNote && (
+                      <div className="px-4 pb-3 border-t border-gray-100 dark:border-gray-700 pt-2">
+                        <input
+                          type="text"
+                          className="input text-sm py-2"
+                          placeholder="Aclaración opcional..."
+                          value={hData.note || ''}
+                          onChange={e => setHabitField(habit.id, 'note', e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
+              return null
             })}
           </div>
         </div>
@@ -201,10 +322,10 @@ export default function PatientDashboard() {
     ? Math.round((chartFilteredEntries.reduce((s, e) => s + e.moodScore, 0) / chartFilteredEntries.length) * 10) / 10
     : null
 
-  const handleCreate = async ({ mood, content, completedHabits }) => {
+  const handleCreate = async ({ mood, content, completedHabits, habitData }) => {
     setSubmitting(true)
     try {
-      const { data } = await api.post('/journal', { moodScore: mood, content, completedHabits })
+      const { data } = await api.post('/journal', { moodScore: mood, content, completedHabits, habitData })
       setEntries((prev) => [data.entry, ...prev])
       showSuccess('¡Nota de hoy guardada! 🎉')
       setEditMode(false)
@@ -215,10 +336,10 @@ export default function PatientDashboard() {
     }
   }
 
-  const handleUpdate = async ({ mood, content, completedHabits }) => {
+  const handleUpdate = async ({ mood, content, completedHabits, habitData }) => {
     setSubmitting(true)
     try {
-      const { data } = await api.put(`/journal/${todayEntry.id}`, { moodScore: mood, content, completedHabits })
+      const { data } = await api.put(`/journal/${todayEntry.id}`, { moodScore: mood, content, completedHabits, habitData })
       setEntries((prev) => prev.map((e) => e.id === todayEntry.id ? data.entry : e))
       showSuccess('Nota actualizada.')
       setEditMode(false)
@@ -286,6 +407,7 @@ export default function PatientDashboard() {
             initialMood={todayEntry.moodScore}
             initialContent={todayEntry.content}
             initialHabits={todayEntry.completedHabits || []}
+            initialHabitData={todayEntry.habitData || {}}
             habits={habits}
             onSubmit={handleUpdate}
             onCancel={() => setEditMode(false)}
@@ -340,15 +462,34 @@ export default function PatientDashboard() {
             <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
               {todayEntry.content}
             </p>
+            {/* Hábitos: toggle completados */}
             {todayEntry.completedHabits?.length > 0 && habits.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {todayEntry.completedHabits.map(hId => {
                   const h = habits.find(x => x.id === hId)
                   if (!h) return null
+                  const type = h.trackingType || 'toggle'
                   const IconComp = HABIT_ICONS[h.icon] || HABIT_ICONS.CheckCircle
+                  const hData = todayEntry.habitData?.[hId]
+                  const showQty = (type === 'toggle+qty') && hData?.qty !== undefined && hData?.qty !== ''
                   return (
                     <span key={hId} className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-300 font-medium">
                       <IconComp size={12} /> {h.text}
+                      {showQty && <span className="font-bold ml-0.5">{hData.qty} {h.unit}</span>}
+                    </span>
+                  )
+                })}
+              </div>
+            )}
+            {/* Hábitos qty: siempre se muestran si tienen valor */}
+            {habits.filter(h => (h.trackingType === 'qty') && todayEntry.habitData?.[h.id]?.qty !== undefined && todayEntry.habitData?.[h.id]?.qty !== '').length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {habits.filter(h => h.trackingType === 'qty' && todayEntry.habitData?.[h.id]?.qty !== undefined && todayEntry.habitData?.[h.id]?.qty !== '').map(h => {
+                  const IconComp = HABIT_ICONS[h.icon] || HABIT_ICONS.CheckCircle
+                  const qty = todayEntry.habitData[h.id].qty
+                  return (
+                    <span key={h.id} className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-medium">
+                      <IconComp size={12} /> {h.text}: <span className="font-bold">{qty} {h.unit}</span>
                     </span>
                   )
                 })}

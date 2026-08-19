@@ -41,10 +41,16 @@ export default function PatientProfile() {
   const [habits, setHabits] = useState([])
   const [newText, setNewText] = useState('')
   const [newIcon, setNewIcon] = useState('CheckCircle')
+  const [newTrackingType, setNewTrackingType] = useState('toggle')
+  const [newUnit, setNewUnit] = useState('')
+  const [newHasNote, setNewHasNote] = useState(false)
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [editText, setEditText] = useState('')
   const [editIcon, setEditIcon] = useState('')
+  const [editTrackingType, setEditTrackingType] = useState('toggle')
+  const [editUnit, setEditUnit] = useState('')
+  const [editHasNote, setEditHasNote] = useState(false)
 
   useEffect(() => {
     api.get('/habits').then(({ data }) => setHabits(data.habits)).catch(() => {})
@@ -74,17 +80,32 @@ export default function PatientProfile() {
   const handleAddHabit = async () => {
     if (!newText.trim()) return
     try {
-      const { data } = await api.post('/habits', { text: newText.trim(), icon: newIcon })
+      const { data } = await api.post('/habits', {
+        text: newText.trim(),
+        icon: newIcon,
+        trackingType: newTrackingType,
+        unit: newTrackingType !== 'toggle' ? newUnit.trim() : '',
+        hasNote: newHasNote,
+      })
       setHabits(prev => [...prev, data.habit])
       setNewText('')
       setNewIcon('CheckCircle')
+      setNewTrackingType('toggle')
+      setNewUnit('')
+      setNewHasNote(false)
       setAdding(false)
     } catch { alert('Error al crear hábito.') }
   }
 
   const handleSaveEditHabit = async (id) => {
     try {
-      const { data } = await api.put(`/habits/${id}`, { text: editText, icon: editIcon })
+      const { data } = await api.put(`/habits/${id}`, {
+        text: editText,
+        icon: editIcon,
+        trackingType: editTrackingType,
+        unit: editTrackingType !== 'toggle' ? editUnit.trim() : '',
+        hasNote: editHasNote,
+      })
       setHabits(prev => prev.map(h => h.id === id ? data.habit : h))
       setEditingId(null)
     } catch { alert('Error al guardar.') }
@@ -116,6 +137,35 @@ export default function PatientProfile() {
           </button>
         )
       })}
+    </div>
+  )
+
+  // Tipo de seguimiento — pills selector
+  const TRACKING_TYPES = [
+    { value: 'toggle',     label: 'Sí/No',         desc: 'Marca si lo hiciste' },
+    { value: 'toggle+qty', label: 'Sí/No + Cantidad', desc: 'Marca y registra cuánto' },
+    { value: 'qty',        label: 'Solo cantidad',   desc: 'Registrá solo el valor' },
+  ]
+
+  const TrackingTypeSelector = ({ value, onChange }) => (
+    <div className="space-y-1.5">
+      <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tipo de seguimiento</p>
+      <div className="flex gap-2 flex-wrap">
+        {TRACKING_TYPES.map(t => (
+          <button
+            key={t.value}
+            onClick={() => onChange(t.value)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all ${
+              value === t.value
+                ? 'border-sage-400 bg-sage-400 text-white'
+                : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-sage-300'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-xs text-gray-400">{TRACKING_TYPES.find(t => t.value === value)?.desc}</p>
     </div>
   )
 
@@ -163,15 +213,37 @@ export default function PatientProfile() {
         {adding && (
           <div className="bg-sage-50 dark:bg-sage-900/20 rounded-3xl p-4 space-y-3 animate-fade-in border border-sage-200 dark:border-sage-800">
             <IconSelector value={newIcon} onChange={setNewIcon} />
-            <div className="flex gap-2">
-              <input
-                className="input flex-1"
-                placeholder="Ej: Meditar 5 minutos"
-                value={newText}
-                onChange={e => setNewText(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAddHabit()}
-              />
-            </div>
+            <input
+              className="input"
+              placeholder="Ej: Salir a correr"
+              value={newText}
+              onChange={e => setNewText(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleAddHabit()}
+            />
+            <TrackingTypeSelector value={newTrackingType} onChange={setNewTrackingType} />
+            {newTrackingType !== 'toggle' && (
+              <div className="flex items-center gap-2">
+                <input
+                  className="input flex-1"
+                  placeholder="Unidad (ej: km, horas, vasos)"
+                  value={newUnit}
+                  onChange={e => setNewUnit(e.target.value)}
+                />
+              </div>
+            )}
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <div
+                onClick={() => setNewHasNote(!newHasNote)}
+                className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${
+                  newHasNote ? 'bg-sage-400' : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+              >
+                <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all shadow-sm ${
+                  newHasNote ? 'left-5' : 'left-0.5'
+                }`} />
+              </div>
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Permitir aclaración de texto</span>
+            </label>
             <div className="flex gap-2">
               <button onClick={handleAddHabit} disabled={!newText.trim()} className="btn-patient text-sm flex-1">
                 Guardar hábito
@@ -192,19 +264,43 @@ export default function PatientProfile() {
         <div className="space-y-2">
           {habits.map(habit => {
             const IconComponent = HABIT_ICONS[habit.icon] || HABIT_ICONS.CheckCircle
-            
+            const type = habit.trackingType || 'toggle'
+            const typeLabel = type === 'toggle+qty' ? `Sí/No+${habit.unit||'cant.'}` : type === 'qty' ? `${habit.unit||'cant.'}` : null
+
             return (
               <div key={habit.id} className="flex flex-col gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-2xl px-4 py-3 border border-transparent hover:border-gray-200 transition-colors">
                 {editingId === habit.id ? (
                   <>
                     <IconSelector value={editIcon} onChange={setEditIcon} />
-                    <div className="flex items-center gap-2">
+                    <input
+                      className="input py-1.5 text-sm"
+                      value={editText}
+                      onChange={e => setEditText(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleSaveEditHabit(habit.id)}
+                    />
+                    <TrackingTypeSelector value={editTrackingType} onChange={setEditTrackingType} />
+                    {editTrackingType !== 'toggle' && (
                       <input
-                        className="input flex-1 py-1.5 text-sm"
-                        value={editText}
-                        onChange={e => setEditText(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleSaveEditHabit(habit.id)}
+                        className="input"
+                        placeholder="Unidad (ej: km, horas, vasos)"
+                        value={editUnit}
+                        onChange={e => setEditUnit(e.target.value)}
                       />
+                    )}
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <div
+                        onClick={() => setEditHasNote(!editHasNote)}
+                        className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${
+                          editHasNote ? 'bg-sage-400' : 'bg-gray-300 dark:bg-gray-600'
+                        }`}
+                      >
+                        <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all shadow-sm ${
+                          editHasNote ? 'left-5' : 'left-0.5'
+                        }`} />
+                      </div>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Permitir aclaración de texto</span>
+                    </label>
+                    <div className="flex items-center gap-2">
                       <button onClick={() => handleSaveEditHabit(habit.id)} className="p-2 text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 rounded-xl">
                         <Check size={18} />
                       </button>
@@ -218,9 +314,22 @@ export default function PatientProfile() {
                     <span className="text-sage-500 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-peach-100 dark:border-gray-600">
                       <IconComponent size={20} />
                     </span>
-                    <span className="flex-1 text-sm font-semibold text-gray-700 dark:text-gray-200">{habit.text}</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="block text-sm font-semibold text-gray-700 dark:text-gray-200 truncate">{habit.text}</span>
+                      {typeLabel && (
+                        <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400">{typeLabel}</span>
+                      )}
+                      {habit.hasNote && <span className="ml-1.5 text-[10px] text-gray-400">💬 aclaración</span>}
+                    </div>
                     <button
-                      onClick={() => { setEditingId(habit.id); setEditText(habit.text); setEditIcon(habit.icon) }}
+                      onClick={() => {
+                        setEditingId(habit.id)
+                        setEditText(habit.text)
+                        setEditIcon(habit.icon)
+                        setEditTrackingType(habit.trackingType || 'toggle')
+                        setEditUnit(habit.unit || '')
+                        setEditHasNote(habit.hasNote || false)
+                      }}
                       className="p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-colors"
                     >
                       <Pencil size={15} />
