@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Responsive, WidthProvider } from 'react-grid-layout'
 import api from '../../lib/api'
 import { MOOD_ICONS, formatDate } from '../../lib/constants'
 import MoodIcon from '../../components/MoodIcon'
@@ -8,11 +7,9 @@ import MoodChart from '../../components/MoodChart'
 import {
   ArrowLeft, TrendingUp, TrendingDown, Minus, Plus,
   Wifi, Target, CheckCircle2, Circle, Trash2, ChevronDown, ChevronUp,
-  Save, X, Calendar, Layout, Eye, EyeOff
+  Save, X, Calendar, Eye, EyeOff, LayoutGrid
 } from 'lucide-react'
 import { usePageTitle } from '../../hooks/usePageTitle'
-
-const ResponsiveGridLayout = WidthProvider(Responsive)
 
 // ── Wrapper para paneles modulares ────────────────────────
 function PanelWrapper({ title, icon: Icon, onHide, children, className = '' }) {
@@ -291,39 +288,14 @@ function TherapyGoals({ patientId }) {
   )
 }
 
-// ── Configuraciones de Grilla ─────────────────────────────
+// ── Configuraciones de paneles ────────────────────────────
 const PANELS = [
   { i: 'pre-session', label: 'Ficha Pre-Sesión', icon: TrendingUp },
-  { i: 'mood-chart', label: 'Evolución del Ánimo', icon: Layout },
+  { i: 'mood-chart', label: 'Evolución del Ánimo', icon: TrendingUp },
   { i: 'entries', label: 'Entradas de Paciente', icon: Calendar },
   { i: 'goals', label: 'Objetivos Terapéuticos', icon: Target },
   { i: 'notes', label: 'Notas de Sesión', icon: Save },
 ]
-
-const PANEL_CONSTRAINTS = {
-  'pre-session': { minW: 1, minH: 3 },
-  'mood-chart': { minW: 1, minH: 4 },
-  'entries': { minW: 1, minH: 4 },
-  'goals': { minW: 1, minH: 4 },
-  'notes': { minW: 1, minH: 4 },
-}
-
-const DEFAULT_LAYOUTS = {
-  lg: [
-    { i: 'pre-session', x: 0, y: 0, w: 2, h: 3 },
-    { i: 'mood-chart', x: 0, y: 3, w: 2, h: 5 },
-    { i: 'entries', x: 0, y: 8, w: 2, h: 6 },
-    { i: 'goals', x: 2, y: 0, w: 1, h: 5 },
-    { i: 'notes', x: 2, y: 5, w: 1, h: 8 },
-  ],
-  md: [
-    { i: 'pre-session', x: 0, y: 0, w: 2, h: 3 },
-    { i: 'mood-chart', x: 0, y: 3, w: 2, h: 5 },
-    { i: 'entries', x: 0, y: 8, w: 2, h: 6 },
-    { i: 'goals', x: 0, y: 14, w: 2, h: 5 },
-    { i: 'notes', x: 0, y: 19, w: 2, h: 8 },
-  ]
-}
 
 // ── Vista principal PatientDetail ─────────────────────────
 export default function PatientDetail() {
@@ -335,34 +307,12 @@ export default function PatientDetail() {
   const [loading, setLoading] = useState(true)
   usePageTitle(patient ? patient.name : 'Detalle de Paciente')
 
-  // Layout modular
-  const [layouts, setLayouts] = useState(() => {
-    const saved = localStorage.getItem(`psych_dashboard_layout_${id}`)
-    const parsedLayouts = saved ? JSON.parse(saved) : DEFAULT_LAYOUTS
-    
-    // Forzar restricciones mínimas de tamaño para evitar errores de renderizado
-    const enforcedLayouts = {}
-    for (const bp in parsedLayouts) {
-      enforcedLayouts[bp] = parsedLayouts[bp].map(item => ({
-        ...item,
-        minW: PANEL_CONSTRAINTS[item.i]?.minW || 1,
-        minH: PANEL_CONSTRAINTS[item.i]?.minH || 3
-      }))
-    }
-    return enforcedLayouts
-  })
-
   const [visiblePanels, setVisiblePanels] = useState(() => {
     const saved = localStorage.getItem(`psych_dashboard_visible_${id}`)
     return saved ? JSON.parse(saved) : PANELS.map(p => p.i)
   })
 
   const [showMenu, setShowMenu] = useState(false)
-
-  const onLayoutChange = (layout, allLayouts) => {
-    setLayouts(allLayouts)
-    localStorage.setItem(`psych_dashboard_layout_${id}`, JSON.stringify(allLayouts))
-  }
 
   const togglePanel = (panelId) => {
     setVisiblePanels(prev => {
@@ -387,7 +337,7 @@ export default function PatientDetail() {
         if (jRes.status === 'fulfilled') setEntries(jRes.value.data.entries || [])
         if (iRes.status === 'fulfilled') setInsights(iRes.value.data)
       } catch (err) {
-        console.error('Error cargando PatientDetail:', err)
+        // silenciar errores de carga
       } finally {
         setLoading(false)
       }
@@ -397,44 +347,6 @@ export default function PatientDetail() {
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="card-psych h-24 bg-gray-100 dark:bg-gray-800" />)}</div>
   if (!patient) return <div className="text-center py-20 text-gray-400">Paciente no encontrado.</div>
-
-  const renderPanel = (panelId) => {
-    switch (panelId) {
-      case 'pre-session':
-        return <PreSessionCard insights={insights} />
-      case 'mood-chart':
-        return <MoodChart entries={entries} mode="psych" height="100%" defaultDays={14} />
-      case 'entries':
-        return (
-          <div className="space-y-2">
-            {entries.map((entry) => {
-              const config = MOOD_ICONS[entry.moodScore]
-              const open = expandedEntry === entry.id
-              return (
-                <div key={entry.id} className={`rounded-xl border transition-all cursor-pointer ${open ? 'border-indigo-200 bg-indigo-50/30' : 'border-gray-100 hover:border-gray-200 dark:border-gray-700'}`}>
-                  <div className="flex items-center gap-2 p-2" onClick={() => setExpandedEntry(open ? null : entry.id)}>
-                    <div className="w-8 h-8 rounded-lg flex flex-col items-center justify-center shrink-0" style={{ backgroundColor: config?.bg }}>
-                      <MoodIcon score={entry.moodScore} size={12} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5"><span className="text-[11px] font-bold" style={{ color: config?.color }}>{config?.label}</span></div>
-                      <p className="text-[10px] text-gray-400 truncate capitalize">{formatDate(entry.createdAt)}</p>
-                    </div>
-                    {open ? <ChevronUp size={12} className="text-gray-400" /> : <ChevronDown size={12} className="text-gray-400" />}
-                  </div>
-                  {open && <div className="px-2 pb-2 border-t border-gray-100 pt-2 animate-fade-in text-[11px] text-gray-700 whitespace-pre-wrap">{entry.content}</div>}
-                </div>
-              )
-            })}
-          </div>
-        )
-      case 'goals':
-        return <TherapyGoals patientId={id} />
-      case 'notes':
-        return <SessionNotes patientId={id} />
-      default: return null
-    }
-  }
 
   return (
     <div className="space-y-5 animate-fade-in relative pb-10">
@@ -455,7 +367,7 @@ export default function PatientDetail() {
         {/* Dropdown de Paneles */}
         <div className="relative">
           <button onClick={() => setShowMenu(!showMenu)} className="btn-ghost flex items-center gap-2 text-sm py-2 px-3">
-            <Layout size={16} /> Paneles
+            <LayoutGrid size={16} /> Paneles
           </button>
           {showMenu && (
             <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 z-50 p-2 animate-scale-in">
@@ -476,29 +388,62 @@ export default function PatientDetail() {
         </div>
       </div>
 
-      {/* Modular Grid */}
-      <div className="-mx-2">
-        <ResponsiveGridLayout
-          className="layout"
-          layouts={layouts}
-          breakpoints={{ lg: 1024, md: 768, sm: 640, xs: 480, xxs: 0 }}
-          cols={{ lg: 3, md: 2, sm: 1, xs: 1, xxs: 1 }}
-          rowHeight={60}
-          onLayoutChange={onLayoutChange}
-          draggableHandle=".draggable-handle"
-          margin={[16, 16]}
-          isBounded={false}
-          useCSSTransforms={true}
-          resizeHandles={['se', 'sw', 'ne', 'nw']}
-        >
-          {PANELS.filter(p => visiblePanels.includes(p.i)).map(panel => (
-            <div key={panel.i}>
-              <PanelWrapper title={panel.label} icon={panel.icon} onHide={() => togglePanel(panel.i)}>
-                {renderPanel(panel.i)}
-              </PanelWrapper>
-            </div>
-          ))}
-        </ResponsiveGridLayout>
+      {/* Paneles en layout CSS de 2 columnas */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Columna principal (2/3) */}
+        <div className="lg:col-span-2 space-y-4">
+          {visiblePanels.includes('pre-session') && (
+            <PanelWrapper title="Ficha Pre-Sesión" icon={TrendingUp} onHide={() => togglePanel('pre-session')}>
+              <PreSessionCard insights={insights} />
+            </PanelWrapper>
+          )}
+          {visiblePanels.includes('mood-chart') && (
+            <PanelWrapper title="Evolución del Ánimo" icon={TrendingUp} onHide={() => togglePanel('mood-chart')}>
+              <div style={{ minHeight: 240 }}>
+                <MoodChart entries={entries} mode="psych" height={240} defaultDays={14} />
+              </div>
+            </PanelWrapper>
+          )}
+          {visiblePanels.includes('entries') && (
+            <PanelWrapper title="Entradas de Paciente" icon={Calendar} onHide={() => togglePanel('entries')}>
+              <div className="space-y-2">
+                {entries.map((entry) => {
+                  const config = MOOD_ICONS[entry.moodScore]
+                  const open = expandedEntry === entry.id
+                  return (
+                    <div key={entry.id} className={`rounded-xl border transition-all cursor-pointer ${open ? 'border-indigo-200 bg-indigo-50/30' : 'border-gray-100 hover:border-gray-200 dark:border-gray-700'}`}>
+                      <div className="flex items-center gap-2 p-2" onClick={() => setExpandedEntry(open ? null : entry.id)}>
+                        <div className="w-8 h-8 rounded-lg flex flex-col items-center justify-center shrink-0" style={{ backgroundColor: config?.bg }}>
+                          <MoodIcon score={entry.moodScore} size={12} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5"><span className="text-[11px] font-bold" style={{ color: config?.color }}>{config?.label}</span></div>
+                          <p className="text-[10px] text-gray-400 truncate capitalize">{formatDate(entry.createdAt)}</p>
+                        </div>
+                        {open ? <ChevronUp size={12} className="text-gray-400" /> : <ChevronDown size={12} className="text-gray-400" />}
+                      </div>
+                      {open && <div className="px-2 pb-2 border-t border-gray-100 pt-2 animate-fade-in text-[11px] text-gray-700 whitespace-pre-wrap">{entry.content}</div>}
+                    </div>
+                  )
+                })}
+              </div>
+            </PanelWrapper>
+          )}
+        </div>
+
+        {/* Columna lateral (1/3) */}
+        <div className="space-y-4">
+          {visiblePanels.includes('goals') && (
+            <PanelWrapper title="Objetivos Terapéuticos" icon={Target} onHide={() => togglePanel('goals')}>
+              <TherapyGoals patientId={id} />
+            </PanelWrapper>
+          )}
+          {visiblePanels.includes('notes') && (
+            <PanelWrapper title="Notas de Sesión" icon={Save} onHide={() => togglePanel('notes')}>
+              <SessionNotes patientId={id} />
+            </PanelWrapper>
+          )}
+        </div>
       </div>
     </div>
   )

@@ -17,8 +17,6 @@ export default defineConfig({
     // No exponer sourcemaps en producción
     sourcemap: false,
     rollupOptions: {
-      // Externalizar paquetes no instalados localmente para evitar errores de build
-      external: ['react-grid-layout', 'react-resizable'],
       output: {
         // Code-splitting manual: separa vendors pesados en chunks propios
         manualChunks: {
