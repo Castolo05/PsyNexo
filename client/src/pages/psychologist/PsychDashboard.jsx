@@ -6,8 +6,10 @@ import { MOOD_ICONS, formatDateShort } from '../../lib/constants'
 import MoodIcon from '../../components/MoodIcon'
 import AppointmentCalendar from '../../components/AppointmentCalendar'
 import { AlertTriangle, Users, ChevronRight, Copy, Check, CalendarDays } from 'lucide-react'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 export default function PsychDashboard() {
+  usePageTitle('Panel')
   const { user } = useAuth()
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
@@ -17,7 +19,7 @@ export default function PsychDashboard() {
   useEffect(() => {
     api.get('/patients')
       .then(({ data }) => setPatients(data.patients))
-      .catch(console.error)
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 

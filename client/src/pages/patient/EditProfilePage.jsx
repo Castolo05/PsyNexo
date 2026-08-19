@@ -5,6 +5,7 @@ import {
   UserRound, X, Camera, Cat, Dog, Rabbit, Bird, Snail, Turtle, Fish, Rat
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 // Mapeo de animalitos para el avatar
 const ANIMAL_ICONS = {
@@ -26,6 +27,7 @@ export function AvatarDisplay({ avatar, size = 28, className = "" }) {
 }
 
 export default function EditProfilePage() {
+  usePageTitle('Editar Perfil')
   const { user, updateUser } = useAuth()
   const navigate = useNavigate()
 

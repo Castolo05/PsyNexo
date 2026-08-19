@@ -10,6 +10,7 @@ import {
   Wifi, Target, CheckCircle2, Circle, Trash2, ChevronDown, ChevronUp,
   Save, X, Calendar, Layout, Eye, EyeOff
 } from 'lucide-react'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
 
@@ -332,6 +333,7 @@ export default function PatientDetail() {
   const [insights, setInsights] = useState(null)
   const [expandedEntry, setExpandedEntry] = useState(null)
   const [loading, setLoading] = useState(true)
+  usePageTitle(patient ? patient.name : 'Detalle de Paciente')
 
   // Layout modular
   const [layouts, setLayouts] = useState(() => {

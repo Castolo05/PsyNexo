@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { UserRound, Stethoscope } from 'lucide-react'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 export default function RegisterPage() {
+  usePageTitle('Crear cuenta')
   const { register } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'PATIENT' })

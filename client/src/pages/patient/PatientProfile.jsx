@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useNavigate, Link } from 'react-router-dom'
 import { HABIT_ICONS } from '../../lib/constants'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 // Mapeo de animalitos para el avatar
 const ANIMAL_ICONS = {
@@ -28,6 +29,7 @@ export function AvatarDisplay({ avatar, size = 28, className = "" }) {
 }
 
 export default function PatientProfile() {
+  usePageTitle('Mi Perfil')
   const { user, logout, updateUser } = useAuth()
   const navigate = useNavigate()
   const [code, setCode] = useState('')
@@ -45,7 +47,7 @@ export default function PatientProfile() {
   const [editIcon, setEditIcon] = useState('')
 
   useEffect(() => {
-    api.get('/habits').then(({ data }) => setHabits(data.habits)).catch(console.error)
+    api.get('/habits').then(({ data }) => setHabits(data.habits)).catch(() => {})
   }, [])
 
   const handleLink = async (e) => {

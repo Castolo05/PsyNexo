@@ -31,7 +31,7 @@ export default function PsychLayout() {
       <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex-col py-6 px-4 shrink-0 hidden lg:flex transition-colors duration-300 sticky top-0 h-screen overflow-y-auto">
         {/* Logo */}
         <div className="flex items-center gap-2 px-2 mb-8">
-          <img src="/logo.png" alt="Logo" className="w-9 h-9 rounded-xl shadow-sm" />
+          <img src="/logo.png" alt="SOMA — Plataforma de bienestar mental" className="w-9 h-9 rounded-xl shadow-sm" />
           <span className="font-bold text-gray-900 dark:text-white text-lg">SOMA</span>
         </div>
 
@@ -95,7 +95,7 @@ export default function PsychLayout() {
         {/* Top bar móvil */}
         <header className="lg:hidden bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-lg shadow-sm" />
+            <img src="/logo.png" alt="SOMA — Plataforma de bienestar mental" className="w-8 h-8 rounded-lg shadow-sm" />
             <span className="font-bold text-gray-800 dark:text-white">SOMA</span>
           </div>
           <div className="flex gap-1 items-center">

@@ -1,5 +1,6 @@
 import { Phone, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 const LINES = [
   { country: '🇦🇷 Argentina', name: 'Centro de Asistencia al Suicida', number: '135', free: true },
@@ -10,6 +11,7 @@ const LINES = [
 ]
 
 export default function EmergencyPage() {
+  usePageTitle('Ayuda de emergencia')
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Aviso importante */}

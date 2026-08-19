@@ -4,8 +4,10 @@ import api from '../../lib/api'
 import { formatDateShort } from '../../lib/constants'
 import MoodIcon from '../../components/MoodIcon'
 import { ChevronRight, AlertTriangle, Search } from 'lucide-react'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 export default function PatientsList() {
+  usePageTitle('Mis Pacientes')
   const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -13,7 +15,7 @@ export default function PatientsList() {
   useEffect(() => {
     api.get('/patients')
       .then(({ data }) => setPatients(data.patients))
-      .catch(console.error)
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 

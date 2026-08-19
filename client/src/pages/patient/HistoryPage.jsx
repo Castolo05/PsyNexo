@@ -5,6 +5,7 @@ import MoodIcon from '../../components/MoodIcon'
 import MoodCalendar from '../../components/MoodCalendar'
 import MoodChart from '../../components/MoodChart'
 import { Trash2, ChevronDown, ChevronUp, Clock, TrendingUp, TrendingDown, Minus, BarChart2, Book, Calendar } from 'lucide-react'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 // ── Tarjeta de correlación hábito-ánimo ──────────────────
 function HabitCorrelationCard({ data }) {
@@ -107,6 +108,7 @@ function HabitCorrelationCard({ data }) {
 
 // ── Página de historial ───────────────────────────────────
 export default function HistoryPage() {
+  usePageTitle('Historial')
   const [entries, setEntries] = useState([])
   const [habits, setHabits] = useState([])
   const [correlation, setCorrelation] = useState([])
@@ -125,7 +127,7 @@ export default function HistoryPage() {
       setEntries(jRes.data.entries)
       setHabits(hRes.data.habits)
       setCorrelation(cRes.data)
-    }).catch(console.error).finally(() => setLoading(false))
+    }).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
   const handleDelete = async (id) => {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Wind } from 'lucide-react'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 const PHASES = [
   { label: 'Inhala', duration: 4, color: '#059669' },
@@ -9,6 +10,7 @@ const PHASES = [
 ]
 
 export default function BreathingPage() {
+  usePageTitle('Respiración 4-4-4')
   const navigate = useNavigate()
   const [running, setRunning] = useState(false)
   const [phase, setPhase] = useState(0)

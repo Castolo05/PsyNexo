@@ -1,7 +1,6 @@
 /* ── Fuentes ─────────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
-@import "react-grid-layout/css/styles.css";
-@import "react-resizable/css/styles.css";
+/* Estilos base para react-grid-layout (inline, sin dependencia del paquete instalado) */
 
 .react-resizable-handle {
   z-index: 50 !important;

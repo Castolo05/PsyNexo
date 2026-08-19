@@ -8,6 +8,7 @@ import api from '../../lib/api'
 import { MOOD_ICONS, HABIT_ICONS, formatDateShort, isSameDay, isEditable } from '../../lib/constants'
 import MoodIcon from '../../components/MoodIcon'
 import MoodChart from '../../components/MoodChart'
+import { usePageTitle } from '../../hooks/usePageTitle'
 
 function todayString() {
   return new Date().toLocaleDateString('es-AR', {
@@ -157,6 +158,7 @@ function NoteForm({ initialMood = 5, initialContent = '', initialHabits = [], ha
 
 // ── Dashboard principal ──────────────────────────────────────────
 export default function PatientDashboard() {
+  usePageTitle('Mi día')
   const { user } = useAuth()
   const [entries, setEntries] = useState([])
   const [habits, setHabits] = useState([])
@@ -179,7 +181,7 @@ export default function PatientDashboard() {
       setEntries(jRes.data.entries)
       setAppointments(aRes.data.appointments)
       setHabits(hRes.data.habits)
-    }).catch(console.error).finally(() => setLoading(false))
+    }).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
   const todayEntry = entries.find((e) => isSameDay(new Date(e.createdAt), new Date()))

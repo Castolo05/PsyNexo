@@ -22,6 +22,9 @@ import PsychDashboard from './pages/psychologist/PsychDashboard'
 import PatientsList from './pages/psychologist/PatientsList'
 import PatientDetail from './pages/psychologist/PatientDetail'
 
+// 404
+import NotFoundPage from './pages/NotFoundPage'
+
 export default function App() {
   return (
     <AuthProvider>
@@ -65,7 +68,8 @@ export default function App() {
             <Route path="patients/:id" element={<PatientDetail />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          {/* 404 */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </HashRouter>
     </AuthProvider>
